@@ -1,9 +1,14 @@
 # TODO: Every error message, must be declered in the config file (config.py)
 # TODO: Declare (in config.py) the meaning of: callback, registry
 
-from Config import *
 
-import _winreg
+from Config import *
+from pywin32_Structs import *
+
+from ctypes import windll, byref
+
+import time
+
 import ctypes
 import win32pdh
 
@@ -22,9 +27,9 @@ class System:
         """
 
         return get_registry_value(
-                    "HKEY_LOCAL_MACHINE",
-                    "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
-                    "ProductName")
+                "HKEY_LOCAL_MACHINE",
+                "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                "ProductName")
 
     def get_processes_list(self):
         """
@@ -79,7 +84,31 @@ print s.get_os_version()
 
 
 # ============================================================================ CPU
-# TODO: CPU Utilization, Process cpu usage
+# TODO: Process cpu usage
+
+
+def GetSystemTimes():
+    """
+    Uses the function GetSystemTimes() in order to get the user time, kernel time and idle time
+    :return: user time, kernel time and idle time (Dictinary)
+    """
+
+    __GetSystemTimes = windll.kernel32.GetSystemTimes
+    idleTime, kernelTime, userTime = FILETIME(), FILETIME(), FILETIME()
+
+    success = __GetSystemTimes(
+
+            byref(idleTime),
+            byref(kernelTime),
+            byref(userTime))
+
+    assert success, ctypes.WinError(ctypes.GetLastError())[1]
+
+    return {
+        "idleTime": idleTime.dwLowDateTime,
+        "kernelTime": kernelTime.dwLowDateTime,
+        "userTime": userTime.dwLowDateTime}
+
 
 class CPU:
     def __init__(self):
@@ -95,12 +124,37 @@ class CPU:
                 "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
                 "ProcessorNameString")
 
+    def cpu_utilization(self):
+        """
+        Calculates the CPU utilization by GetSystemTimes() function from win32 api.
+        The calculation includes: User mode time, Kernel mode time and Idle mode time.
+
+        Source: http://www.codeproject.com/Articles/9113/Get-CPU-Usage-with-GetSystemTimes
+        :return: CPU usage (int)
+        """
+
+        FirstSystemTimes = GetSystemTimes()
+        time.sleep(2)
+        SecSystemTimes = GetSystemTimes()
+
+        usr = SecSystemTimes['userTime'] - FirstSystemTimes['userTime']
+        ker = SecSystemTimes['kernelTime'] - FirstSystemTimes['kernelTime']
+        idl = SecSystemTimes['idleTime'] - FirstSystemTimes['idleTime']
+
+        sys = usr + ker
+        return int((sys - idl * 100) / sys) + 100
+
+
 c = CPU()
 print "# ============================================================================ # CPU"
-print c.get_cpu_model()
+while 1:
+    print c.cpu_utilization()
+    print
 
 # ============================================================================ Memory
 
 # ============================================================================ Disk
 
 # ============================================================================ Network
+
+# ============================================================================ Tests
