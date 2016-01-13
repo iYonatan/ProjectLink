@@ -89,7 +89,7 @@ print s.get_os_version()
 
 def GetSystemTimes():
     """
-    Uses the function GetSystemTimes() (win32) in order to get the user time, kernel time and idle time
+    Uses the function GetSystemTimes() (win32) in order to get the user mode time, kernel mode time and idle mode time
     :return: user time, kernel time and idle time (Dictinary)
     """
 
@@ -188,17 +188,22 @@ class CPU:
 
 c = CPU()
 print "# ============================================================================ # CPU"
-# while 1:
-#     print str(c.cpu_utilization()) + '%'
-#     print str(c.cpu_utilization()) + '%'
-#     print "--------------"
-while 1:
-    c.cpu_utilization()
-    print str(c.cpu_process_util()) + '%'
+print c.cpu_utilization()
 
 
 # ============================================================================ Memory
+class Memory:
+    def __init__(self):
+        pass
 
+    def memory_ram(self):
+        memoryStatus = MEMORYSTATUSEX()
+        memoryStatus.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+        KERNEL_32.GlobalMemoryStatusEx(ctypes.byref(memoryStatus))
+        return memoryStatus.ullTotalPhys
+
+m = Memory()
+print m.memory_ram()
 # ============================================================================ Disk
 
 # ============================================================================ Network
