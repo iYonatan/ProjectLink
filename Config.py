@@ -1,9 +1,7 @@
-from ctypes import *
 import _winreg
 
-KERNEL_32 = windll.Kernel32
 SLEEP_TIME_1_5 = 1.5
-ALL_PROCESS_ACCESS = (0x000F0000L | 0x00100000L | 0xFFF)
+PERCENT_LIMIT = 100
 
 
 def bytes2human(n):

@@ -1,16 +1,15 @@
 # TODO: Every error message, must be declered in the config file (config.py)
 # TODO: Declare (in config.py) the meaning of: callback, registry
 
+import ctypes
+import time
+import win32pdh
+import win32process
+
 from Config import *
 from pywin32_Structs import *
 
-from ctypes import windll, byref
-
-import time
-import ctypes
-import win32api
-import win32pdh
-import win32process
+proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 2376)
 
 
 # ============================================================================ System
@@ -150,16 +149,13 @@ class CPU:
         self.sys = usr + ker
         return int((self.sys - idl) * 100 / self.sys)
 
-    def cpu_process_util(self):
+    def cpu_process_util(self, proc):
         """
         Returns the process usage of CPU
 
         Source: http://www.philosophicalgeek.com/2009/01/03/determine-cpu-usage-of-current-process-c-and-c/
         :return: Process CPU usage (int)
         """
-
-        # Creates a process handle
-        proc = win32api.OpenProcess(ALL_PROCESS_ACCESS, False, 6744)
 
         FirstProcessTimes = win32process.GetProcessTimes(proc)
         time.sleep(SLEEP_TIME_1_5)
@@ -197,13 +193,35 @@ class Memory:
         pass
 
     def memory_ram(self):
+        """
+        Returning the total and the free amount of ram
+        :return: total and the free ram (int)
+        """
         memoryStatus = MEMORYSTATUSEX()
         memoryStatus.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
         KERNEL_32.GlobalMemoryStatusEx(ctypes.byref(memoryStatus))
         return memoryStatus.ullTotalPhys
 
+    def memory_process_usage(self, proc):
+        """Return Win32 process memory counters structure as a dict.
+        :param process: Process handle
+        :returns
+        """
+        GetProcessMemoryInfo = ctypes.windll.psapi.GetProcessMemoryInfo
+        counters = PROCESS_MEMORY_COUNTERS_EX()
+
+        ret = GetProcessMemoryInfo(proc, ctypes.byref(counters),
+                                   ctypes.sizeof(counters))
+        if not ret:
+            raise ctypes.WinError()
+
+        return counters.WorkingSetSize
+
+
 m = Memory()
-print m.memory_ram()
+print "# ============================================================================ # Memory"
+print bytes2human(m.memory_ram())
+
 # ============================================================================ Disk
 
 # ============================================================================ Network
