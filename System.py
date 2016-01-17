@@ -149,17 +149,18 @@ class CPU:
         self.sys = usr + ker
         return int((self.sys - idl) * 100 / self.sys)
 
-    def cpu_process_util(self, proc):
+    def cpu_process_util(self, hproc):
         """
         Returns the process usage of CPU
 
         Source: http://www.philosophicalgeek.com/2009/01/03/determine-cpu-usage-of-current-process-c-and-c/
+        :param hproc: Process handle
         :return: Process CPU usage (int)
         """
 
-        FirstProcessTimes = win32process.GetProcessTimes(proc)
+        FirstProcessTimes = win32process.GetProcessTimes(hproc)
         time.sleep(SLEEP_TIME_1_5)
-        SecProcessTimes = win32process.GetProcessTimes(proc)
+        SecProcessTimes = win32process.GetProcessTimes(hproc)
 
         """
          Process CPU usage is calculated by getting the total amount of time
@@ -195,22 +196,22 @@ class Memory:
     def memory_ram(self):
         """
         Returning the total and the free amount of ram
-        :return: total and the free ram (int)
+        :return: total and the availabe ram (int tuple)
         """
         memoryStatus = MEMORYSTATUSEX()
         memoryStatus.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
         KERNEL_32.GlobalMemoryStatusEx(ctypes.byref(memoryStatus))
-        return memoryStatus.ullTotalPhys
+        return memoryStatus.ullTotalPhys, memoryStatus.ullAvailPhys
 
-    def memory_process_usage(self, proc):
+    def memory_process_usage(self, hproc):
         """Return Win32 process memory counters structure as a dict.
-        :param process: Process handle
+        :param hproc: Process handle
         :returns
         """
         GetProcessMemoryInfo = ctypes.windll.psapi.GetProcessMemoryInfo
         counters = PROCESS_MEMORY_COUNTERS_EX()
 
-        ret = GetProcessMemoryInfo(proc, ctypes.byref(counters),
+        ret = GetProcessMemoryInfo(hproc, ctypes.byref(counters),
                                    ctypes.sizeof(counters))
         if not ret:
             raise ctypes.WinError()
@@ -220,7 +221,7 @@ class Memory:
 
 m = Memory()
 print "# ============================================================================ # Memory"
-print bytes2human(m.memory_ram())
+print [bytes2human(ram) for ram in m.memory_ram()]
 
 # ============================================================================ Disk
 
