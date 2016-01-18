@@ -3,6 +3,7 @@
 
 import ctypes
 import time
+import win32api
 import win32pdh
 import win32process
 
@@ -223,8 +224,41 @@ m = Memory()
 print "# ============================================================================ # Memory"
 print [bytes2human(ram) for ram in m.memory_ram()]
 
-# ============================================================================ Disk
 
+# ============================================================================ Disk
+class Disk:
+    def __init__(self):
+        self.disk_dict = {}
+        self.disk_get_partitions()
+        self.disk_usage()
+
+    def disk_get_partitions(self):
+        """
+        Fill the keys of self.disk_dict.
+        The keys are the devices which connected to the computer.
+
+        :return: None
+        """
+        drives = win32api.GetLogicalDriveStrings()
+        drives = drives.split('\000')[:-1]
+        for drive in drives:
+            drive = unicode(drive)
+            self.disk_dict[drive] = {}
+
+    def disk_usage(self):
+        freeuser = ctypes.c_int64()
+        total = ctypes.c_int64()
+        free = ctypes.c_int64()
+        for drive in self.disk_dict:
+            GetDiskFreeSpaceExW(drive, ctypes.byref(freeuser), ctypes.byref(total), ctypes.byref(free))
+            print drive, bytes2human(total.value)
+            self.disk_dict[drive] = {'total': bytes2human(total.value),
+                                     'free': bytes2human(free.value)}
+
+
+d = Disk()
+print "# ============================================================================ # Disk"
+print d.disk_dict
 # ============================================================================ Network
 
 # ============================================================================ Tests
