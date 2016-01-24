@@ -1,5 +1,5 @@
-# TODO: Every error message, must be declered in the config file (config.py)
-# TODO: Declare (in config.py) the meaning of: callback, registry
+# TODO: Every error message and numbers, must be declered in the config file (config.py)
+# TODO: Declare in the config file the meaning of: callback and registry
 
 import ctypes
 import time
@@ -17,6 +17,7 @@ proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 2376)
 # TODO: Done!
 
 class System:
+
     def __init__(self):
         pass
 
@@ -226,6 +227,9 @@ print [bytes2human(ram) for ram in m.memory_ram()]
 
 
 # ============================================================================ Disk
+# TODO: Done!
+
+
 class Disk:
     def __init__(self):
         self.disk_dict = {}
@@ -234,7 +238,7 @@ class Disk:
 
     def disk_get_partitions(self):
         """
-        Fill the keys of self.disk_dict.
+        Fills the keys of self.disk_dict.
         The keys are the devices which connected to the computer.
 
         :return: None
@@ -246,6 +250,10 @@ class Disk:
             self.disk_dict[drive] = {}
 
     def disk_usage(self):
+        """
+        Getting information about every device in self.disk_dict.
+        :return: None
+        """
         freeuser = ctypes.c_int64()
         total = ctypes.c_int64()
         free = ctypes.c_int64()
@@ -259,6 +267,14 @@ class Disk:
 d = Disk()
 print "# ============================================================================ # Disk"
 print d.disk_dict
+
+
 # ============================================================================ Network
+# TODO: Packet sniffer for: Ethernet, IP, TCP, ICMP, HTTP, FTP
+
+
+class Network:
+    def __init__(self):
+        pass
 
 # ============================================================================ Tests

@@ -1,15 +1,15 @@
-import win32api
-import ctypes
-from Config import *
+import configparser
 
-drives = win32api.GetLogicalDriveStrings()
-drives = drives.split('\000')[:-1]
-print [unicode(d) for d in drives]
-
-freeuser = ctypes.c_int64()
-total = ctypes.c_int64()
-free = ctypes.c_int64()
-
-for i in range(2):
-    ctypes.windll.kernel32.GetDiskFreeSpaceExW(u'C:\\', ctypes.byref(freeuser), ctypes.byref(free), ctypes.byref(total))
-    print bytes2human(free.value)
+config = configparser.ConfigParser()
+config['DEFAULT'] = {'ServerAliveInterval': '45',
+                     'Compression': 'yes',
+                     'CompressionLevel': '9'}
+config['bitbucket.org'] = {}
+config['bitbucket.org']['User'] = '1'
+config['topsecret.server.com'] = {}
+topsecret = config['topsecret.server.com']
+topsecret['Port'] = '50022'  # mutates the parser
+topsecret['ForwardX11'] = 'no'  # same here
+config['DEFAULT']['ForwardX11'] = 'yes'
+with open('example.ini', 'w') as configfile:
+    config.write(configfile)
