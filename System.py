@@ -259,7 +259,6 @@ class Disk:
         free = ctypes.c_int64()
         for drive in self.disk_dict:
             GetDiskFreeSpaceExW(drive, ctypes.byref(freeuser), ctypes.byref(total), ctypes.byref(free))
-            print drive, bytes2human(total.value)
             self.disk_dict[drive] = {'total': bytes2human(total.value),
                                      'free': bytes2human(free.value)}
 
@@ -277,4 +276,6 @@ class Network:
     def __init__(self):
         pass
 
+n = Network()
+print "# ============================================================================ # Network"
 # ============================================================================ Tests
