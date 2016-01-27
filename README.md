@@ -3,13 +3,10 @@
   
   -> Project Link will be availible in May 2016.
   
-
-######################################
-
-Here you can find important and usful documents
+---------------------------------------------------------------
 
 ** Before downloading the project, first read these documents **
-######################################
+
 
 -- Main document --
 https://docs.google.com/document/d/1_wrBB4A9CpzZSJpdlKT38VJwCgoYBJlqgAWGwqBERVE/edit?usp=sharing
