@@ -12,17 +12,16 @@ import struct
 
 from functions import *
 from pywin32_Structs import *
-from Monitor import *
 
-proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 2376)
+proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 7096)
 
 
 # ============================================================================ System
-# TODO: Done!
 
 class System:
     def __init__(self):
-        pass
+        self.obj = 'process'
+        self.item = 'ID Process'
 
     def get_os_version(self):
         """
@@ -37,13 +36,13 @@ class System:
 
     def get_processes_list(self):
         """
-        returns a processes list which are running right now on the computer
-        :return: proc_list (list)
+        returns an ID processes lis
+        :return: proc_handle (list)
         """
 
         try:
+            # Getting all processes name
             junk, proc_list = win32pdh.EnumObjectItems(None, None, 'process', win32pdh.PERF_DETAIL_WIZARD)
-            return junk
         except:
             try:
                 from win32com.client import GetObject
@@ -54,6 +53,40 @@ class System:
                 return proc_list
             except:
                 raise OSError('Counldn\'t get the process list')
+
+        proc_dict = {}
+
+        for instance in proc_list:
+            if instance in proc_dict:
+                proc_dict[instance] += 1
+            else:
+                proc_dict[instance] = 0
+
+        proc_ids = []
+
+        for instance, max_instances in proc_dict.items():
+            for inum in xrange(max_instances + 1):
+                try:
+                    hq = win32pdh.OpenQuery()  # initializes the query handle
+                    path = win32pdh.MakeCounterPath((None, self.obj, instance, None, inum, self.item))
+                    counter_handle = win32pdh.AddCounter(hq, path)  # convert counter path to counter handle
+                    win32pdh.CollectQueryData(hq)  # collects data for the counter
+                    type, val = win32pdh.GetFormattedCounterValue(counter_handle, win32pdh.PDH_FMT_LONG)
+                    proc_ids.append(val)
+                    win32pdh.CloseQuery(hq)
+                except:
+                    raise OSError("Problem getting process id")
+
+        proc_ids.sort()
+
+        proc_handle = []
+
+        # Creates a process handle list
+        for pid in proc_ids:
+            proc_handle.append(ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, pid))
+
+        result = filter(lambda hproc: hproc != 0, proc_handle)
+        return result
 
     def get_windows(self):
         """
@@ -82,9 +115,9 @@ class System:
         return titles
 
 
-s = System()
-print "# ============================================================================ # System"
-print s.get_os_version()
+# s = System()
+# print "# ============================================================================ # System"
+# print s.get_os_version()
 
 
 # ============================================================================ CPU
@@ -137,7 +170,7 @@ class CPU:
         """
 
         FirstSystemTimes = GetSystemTimes()
-        time.sleep(SLEEP_TIME_1_5)
+        time.sleep(0.3)
         SecSystemTimes = GetSystemTimes()
 
         """
@@ -157,14 +190,16 @@ class CPU:
     def cpu_process_util(self, hproc):
         """
         Returns the process usage of CPU
-
+        ** self.cpu_utilization() must run first!!
         Source: http://www.philosophicalgeek.com/2009/01/03/determine-cpu-usage-of-current-process-c-and-c/
         :param hproc: Process handle
         :return: Process CPU usage (int)
         """
 
+        # hproc = proc
+
         FirstProcessTimes = win32process.GetProcessTimes(hproc)
-        time.sleep(SLEEP_TIME_1_5)
+        time.sleep(0.3)
         SecProcessTimes = win32process.GetProcessTimes(hproc)
 
         """
@@ -185,12 +220,11 @@ class CPU:
 
         proc_total_time = proc_usr + proc_ker
 
-        return (100 * proc_total_time) / self.sys
+        proc_utilization = (100 * proc_total_time) / self.sys
+        return proc_utilization
 
 
-c = CPU()
-print "# ============================================================================ # CPU"
-print c.cpu_utilization()
+# print "# ============================================================================ # CPU"
 
 
 # ============================================================================ Memory
@@ -211,7 +245,7 @@ class Memory:
     def memory_process_usage(self, hproc):
         """Return Win32 process memory counters structure as a dict.
         :param hproc: Process handle
-        :returns
+        :returns WorkingSetSize of memory (int)
         """
         GetProcessMemoryInfo = ctypes.windll.psapi.GetProcessMemoryInfo
         counters = PROCESS_MEMORY_COUNTERS_EX()
@@ -224,14 +258,12 @@ class Memory:
         return counters.WorkingSetSize
 
 
-m = Memory()
-print "# ============================================================================ # Memory"
-print [bytes2human(ram) for ram in m.memory_ram()]
+# m = Memory()
+# print "# ============================================================================ # Memory"
+# print [bytes2human(ram) for ram in m.memory_ram()]
 
 
 # ============================================================================ Disk
-# TODO: Done!
-
 
 class Disk:
     def __init__(self):
@@ -266,9 +298,9 @@ class Disk:
                                      'free': bytes2human(free.value)}
 
 
-d = Disk()
-print "# ============================================================================ # Disk"
-print d.disk_dict
+# d = Disk()
+# print "# ============================================================================ # Disk"
+# print d.disk_dict
 
 
 # ============================================================================ Network
@@ -421,14 +453,4 @@ class Network:
                 # print(TAB_1 + 'Other IPv4 Data...')
 
 
-monitor = Monitor()
-n = Network(monitor)
-print "# ============================================================================ # Network"
-
-import threading
-
-network_thread = threading.Thread(target=n.run)
-monitor_thread = threading.Thread(target=monitor.Network_warning)
-
-network_thread.start()
-monitor_thread.start()
+# print "# ============================================================================ # Network"

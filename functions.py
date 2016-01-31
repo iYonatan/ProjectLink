@@ -1,5 +1,6 @@
 import _winreg
 
+SLEEP_TIME_1 = 1
 SLEEP_TIME_1_5 = 1.5
 PERCENT_LIMIT = 100
 
