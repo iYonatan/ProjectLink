@@ -12,6 +12,7 @@ import struct
 
 from functions import *
 from pywin32_Structs import *
+from Monitor import *
 
 proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 2376)
 
@@ -30,9 +31,9 @@ class System:
         """
 
         return get_registry_value(
-                "HKEY_LOCAL_MACHINE",
-                "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
-                "ProductName")
+            "HKEY_LOCAL_MACHINE",
+            "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+            "ProductName")
 
     def get_processes_list(self):
         """
@@ -101,9 +102,9 @@ def GetSystemTimes():
 
     success = __GetSystemTimes(
 
-            byref(idleTime),
-            byref(kernelTime),
-            byref(userTime))
+        byref(idleTime),
+        byref(kernelTime),
+        byref(userTime))
 
     assert success, ctypes.WinError(ctypes.GetLastError())[1]
 
@@ -123,9 +124,9 @@ class CPU:
         :return: CPU model (string)
         """
         return get_registry_value(
-                "HKEY_LOCAL_MACHINE",
-                "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
-                "ProcessorNameString")
+            "HKEY_LOCAL_MACHINE",
+            "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+            "ProcessorNameString")
 
     def cpu_utilization(self):
         """
@@ -271,12 +272,23 @@ print d.disk_dict
 
 
 # ============================================================================ Network
-# TODO: Packet sniffer for: IP, TCP, UDP, ICMP, FTP
+# TODO: Packet sniffer for: IP, TCP, UDP, ICMP
 
 
 class Network:
-    def __init__(self):
-        pass
+    def __init__(self, monitor):
+
+        self.monitor = monitor
+
+        self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
+
+        self.conn.bind(("10.0.0.10", 0))
+
+        # Include IP headers
+        self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+
+        # receive all packages
+        self.conn.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
 
     def get_ipv4_addr(self, bytes_addr):
         """
@@ -337,36 +349,31 @@ class Network:
         return src_port, dest_port, checksum, data[8:]
 
     def run(self):
-
         TAB_1 = '\t - '
         TAB_2 = '\t\t - '
         TAB_3 = '\t\t\t - '
 
         # TODO: Gets computer's ip through the config file
-
-        conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
-        conn.bind(("10.92.5.59", 0))
-
-        # Include IP headers
-        conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-
-        # receive all packages
-        conn.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
-
         print "Continue...."
 
         while True:
-            raw_data, addr = conn.recvfrom(65535)
+            raw_data, addr = self.conn.recvfrom(65535)
 
             version, ttl, proto, src, dest, data = self.IPv4_packet(raw_data)
-            print('\nIP Packet:')
-            print('Version: {}, Destination: {}, Source: {}, Next Protocol: {}'.format(version, dest, src, proto))
+            # # region Print
+            # print('\nIP Packet:')
+            # print('Version: {}, Destination: {}, Source: {}, Next Protocol: {}'.format(version, dest, src, proto))
+            # # endregion
 
+            # ICMP pakcet
             if proto == 1:
                 (icmp_type, code, checksum, data) = self.ICMP_packet(data)
-                print TAB_1 + "ICMP Packet:"
-                print (TAB_2 + 'icmp_type: {}, code: {}, checksum: {}'.format(icmp_type, code, checksum, data))
+                # # region Print
+                # print TAB_1 + "ICMP Packet:"
+                # print (TAB_2 + 'icmp_type: {}, code: {}, checksum: {}'.format(icmp_type, code, checksum, data))
+                # # endregion
 
+            # TCP segment
             elif proto == 6:
                 (src_port, dest_port, sequence, ack,
                  flag_urg,
@@ -377,26 +384,51 @@ class Network:
                  flag_fin,
                  data) = self.TCP_segment(data)
 
-                print TAB_1 + "TCP segment:"
-                print (TAB_2 + 'src_port: {}, dest_port: {}'.format(src_port, dest_port, ))
-                print (
-                    TAB_3 + 'flag_urg: {}, flag_ack: {}, flag_psh: {},flag_rst: {}, flag_syn: {}, flag_fin: {}'.format(
-                            flag_urg,
-                            flag_ack,
-                            flag_psh,
-                            flag_rst,
-                            flag_syn,
-                            flag_fin))
+                tcp_segment = {
+                    "src_ip": src,
+                    "dest_ip": dest,
+                    "src_port": src_port,
+                    "dest_port": dest_port,
+                    "flag_syn": flag_syn
 
+                }
+
+                self.monitor.Add_segmnet(tcp_segment)
+
+                # # region Print
+                # print TAB_1 + "TCP segment:"
+                # print (TAB_2 + 'src_port: {}, dest_port: {}'.format(src_port, dest_port, ))
+                # print (
+                # TAB_3 + 'flag_urg: {}, flag_ack: {}, flag_psh: {},flag_rst: {}, flag_syn: {}, flag_fin: {}'.format(
+                #             flag_urg,
+                #             flag_ack,
+                #             flag_psh,
+                #             flag_rst,
+                #             flag_syn,
+                #             flag_fin))
+                # # endregion
+
+            # UDP segment
             elif proto == 17:
                 (src_port, dest_port, length, data) = self.UDP_segment(data)
-                print TAB_1 + "UDP segment:"
-                print (TAB_2 + 'Source Port: {}, Destination Port: {}, Length: {}'.format(src_port, dest_port, length))
+                # # region Print
+                # print TAB_1 + "UDP segment:"
+                # print (TAB_2 + 'Source Port: {}, Destination Port: {}, Length: {}'.format(src_port, dest_port, length))
+                # # endregion
 
             else:
-                print(TAB_1 + 'Other IPv4 Data...')
+                continue
+                # print(TAB_1 + 'Other IPv4 Data...')
 
 
-n = Network()
+monitor = Monitor()
+n = Network(monitor)
 print "# ============================================================================ # Network"
-n.run()
+
+import threading
+
+network_thread = threading.Thread(target=n.run)
+monitor_thread = threading.Thread(target=monitor.Network_warning)
+
+network_thread.start()
+monitor_thread.start()

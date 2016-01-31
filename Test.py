@@ -63,10 +63,10 @@ def UDP_segment(data):
 
 
 def main():
-    # TODO: Gets computer's ip through the config file
+    # TODO: Get computer's ip through the config file
 
     conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
-    conn.bind(("10.92.5.59", 0))
+    conn.bind(("10.0.0.10", 0))
 
     # Include IP headers
     conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
