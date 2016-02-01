@@ -1,32 +1,37 @@
 from threading import Thread
 from System import *
 from Monitor import *
-from multiprocessing.pool import ThreadPool
+
+
+def process_handler(hcpu, hproc):
+    hcpu.run(hproc)
+
+
+def memory_handler():
+    pass
+
+
+def disk_handler():
+    pass
+
+
+def network_handler():
+    pass
+
 
 monitor = Monitor()
 s = System()
-c = CPU()
+c = CPU(monitor)
 m = Memory()
 d = Disk()
 n = Network(monitor)
 
-pool = ThreadPool(processes=1)
-
 hprocs = s.get_processes_list()
 
-t = time.time()
 for proc in hprocs:
-    print proc
-    c.cpu_utilization()
-    async_result = pool.apply_async(c.cpu_process_util, (proc, ))
-    # process_cpu_thread = Thread(target=c.cpu_process_util, args=(proc, ))
-    # process_memo_thread = Thread(target=m.memory_process_usage, args=(proc, ))
-    return_val = async_result.get()
-    print return_val
-    # process_cpu_thread.start()
-    # process_memo_thread.start()
+    monitor_cpu_thread = Thread(target=process_handler, args=(c, proc))
+    monitor_cpu_thread.start()
 
-print round(time.time() - t)
 
 # monitor_cpu_thread = Thread(target=monitor.cpu_warning)
 # network_thread = Thread(target=n.run)

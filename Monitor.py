@@ -1,27 +1,38 @@
 import time
-from System import CPU
 
 
 class Monitor(object):
     def __init__(self):
-        self.segments = []
+        self.segments = []  # Collects the segments
+        # Declare a specific segment for checking if the other segments have the same dest port in short time
         self.main_segment = None
         self.suspicious_segment_counter = 0
         self.suspicious_segments = []
 
-    def cpu_warning(self):
-        c = CPU()
+        self.suspicious_processes = []
+
+    def cpu_warning(self, hcpu, hproc):
+        """
+        Seeing a process if suspicious or not.
+        This function is ivoked if a sepcific process usage is up to 20%
+
+        :param hcpu: CPU() handler
+        :param hproc: process handler
+        :return: if suspicious (Boolean) and process handler (hprocess)
+        """
+        start = time.time()
         while True:
-            usage = c.cpu_utilization()
-            print usage
-            if 60 < usage < 70:
-                print "It seems that your CPU is working hard..\nYour CPU usage: (%s)" % str(usage)
-            elif 70 < usage < 90:
-                print "There is a possebility for crushing!!\nYour CPU usage: (%s)" % str(usage)
-            elif 90 < usage < 100:
-                print "Turn your PC off !!\nYour CPU usage: (%s)" % str(usage)
-            else:
-                continue
+            usage = hcpu.cpu_process_util(hproc)
+
+            if usage < 20:
+                return False, usage
+
+            now = time.time()
+
+            if (now - start) > 20:
+                self.suspicious_processes.append(hproc)
+                print "Suspicious process has been found: {} has {}%".format(str(hproc), str(usage))
+                return True, usage
 
     def memory_warning(self):
         pass
@@ -38,6 +49,11 @@ class Monitor(object):
         self.segments.append(segment)
 
     def Network_warning(self):
+        # TODO: make a checking for UDP flood
+        """
+        Seeing for DDOS attack in TCP and UDP
+        :return: None
+        """
         start_suspicious_time = None
         passed_it = True
 
