@@ -30,9 +30,9 @@ class System:
         """
 
         return get_registry_value(
-            "HKEY_LOCAL_MACHINE",
-            "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
-            "ProductName")
+                "HKEY_LOCAL_MACHINE",
+                "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                "ProductName")
 
     def get_processes_list(self):
         """
@@ -40,44 +40,46 @@ class System:
         :return: proc_handle (list)
         """
 
+        global proc_ids
         try:
             # Getting all processes name
-            junk, proc_list = win32pdh.EnumObjectItems(None, None, 'process', win32pdh.PERF_DETAIL_WIZARD)
+            junk, proc_list = win32pdh.EnumObjectItems(None, None, self.obj, win32pdh.PERF_DETAIL_WIZARD)
+
+            proc_dict = {}
+
+            for instance in proc_list:
+                if instance in proc_dict:
+                    proc_dict[instance] += 1
+                else:
+                    proc_dict[instance] = 0
+
+            proc_ids = []
+
+            for instance, max_instances in proc_dict.items():
+                for inum in xrange(max_instances + 1):
+                    try:
+                        hq = win32pdh.OpenQuery()  # initializes the query handle
+                        path = win32pdh.MakeCounterPath((None, self.obj, instance, None, inum, self.item))
+                        counter_handle = win32pdh.AddCounter(hq, path)  # convert counter path to counter handle
+                        win32pdh.CollectQueryData(hq)  # collects data for the counter
+                        type, val = win32pdh.GetFormattedCounterValue(counter_handle, win32pdh.PDH_FMT_LONG)
+                        proc_ids.append(val)
+                        win32pdh.CloseQuery(hq)
+                    except:
+                        raise OSError("Problem getting process id")
+
+            proc_ids.sort()
+
         except:
             try:
                 from win32com.client import GetObject
                 WMI = GetObject('winmgmts:')  # COM object
                 proc_instances = WMI.InstancesOf('Win32_Process')  # WMI instanse
-                proc_list = [process.Properties_('Name').Value for process in
+                proc_list = [process.Properties_('ProcessId').Value for process in
                              proc_instances]  # Get the processess names
-                return proc_list
+                proc_ids = proc_list
             except:
                 raise OSError('Counldn\'t get the process list')
-
-        proc_dict = {}
-
-        for instance in proc_list:
-            if instance in proc_dict:
-                proc_dict[instance] += 1
-            else:
-                proc_dict[instance] = 0
-
-        proc_ids = []
-
-        for instance, max_instances in proc_dict.items():
-            for inum in xrange(max_instances + 1):
-                try:
-                    hq = win32pdh.OpenQuery()  # initializes the query handle
-                    path = win32pdh.MakeCounterPath((None, self.obj, instance, None, inum, self.item))
-                    counter_handle = win32pdh.AddCounter(hq, path)  # convert counter path to counter handle
-                    win32pdh.CollectQueryData(hq)  # collects data for the counter
-                    type, val = win32pdh.GetFormattedCounterValue(counter_handle, win32pdh.PDH_FMT_LONG)
-                    proc_ids.append(val)
-                    win32pdh.CloseQuery(hq)
-                except:
-                    raise OSError("Problem getting process id")
-
-        proc_ids.sort()
 
         proc_handle = []
 
@@ -114,6 +116,10 @@ class System:
         EnumWindows(EnumWindowsProc(foreach_window), 0)  # Callback
         return titles
 
+    def run(self):
+        # TODO: make an update function for the processes
+        pass
+
 
 # s = System()
 # print "# ============================================================================ # System"
@@ -135,9 +141,9 @@ def GetSystemTimes():
 
     success = __GetSystemTimes(
 
-        byref(idleTime),
-        byref(kernelTime),
-        byref(userTime))
+            byref(idleTime),
+            byref(kernelTime),
+            byref(userTime))
 
     assert success, ctypes.WinError(ctypes.GetLastError())[1]
 
@@ -148,8 +154,9 @@ def GetSystemTimes():
 
 
 class CPU:
-    def __init__(self):
+    def __init__(self, monitor):
         self.sys = None
+        self.monitor = monitor
 
     def get_cpu_model(self):
         """
@@ -157,9 +164,9 @@ class CPU:
         :return: CPU model (string)
         """
         return get_registry_value(
-            "HKEY_LOCAL_MACHINE",
-            "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
-            "ProcessorNameString")
+                "HKEY_LOCAL_MACHINE",
+                "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+                "ProcessorNameString")
 
     def cpu_utilization(self):
         """
@@ -223,6 +230,16 @@ class CPU:
         proc_utilization = (100 * proc_total_time) / self.sys
         return proc_utilization
 
+    def run(self, hproc):
+        while True:
+            cpu_usage = self.cpu_utilization()
+            if cpu_usage > 30:
+                process_usage = self.cpu_process_util(hproc)
+                if process_usage > 20:
+                    suspicious = self.monitor.cpu_warning(self, hproc)
+                    if not suspicious[0]:
+                        continue
+
 
 # print "# ============================================================================ # CPU"
 
@@ -243,7 +260,8 @@ class Memory:
         return memoryStatus.ullTotalPhys, memoryStatus.ullAvailPhys
 
     def memory_process_usage(self, hproc):
-        """Return Win32 process memory counters structure as a dict.
+        """
+        Return Win32 process memory counters structure as a dict.
         :param hproc: Process handle
         :returns WorkingSetSize of memory (int)
         """
@@ -314,7 +332,7 @@ class Network:
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
-        self.conn.bind(("10.0.0.10", 0))
+        self.conn.bind(("10.92.5.59", 0))
 
         # Include IP headers
         self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
@@ -451,6 +469,5 @@ class Network:
             else:
                 continue
                 # print(TAB_1 + 'Other IPv4 Data...')
-
 
 # print "# ============================================================================ # Network"
