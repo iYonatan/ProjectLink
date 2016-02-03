@@ -20,6 +20,10 @@ proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 7096)
 
 class System:
     def __init__(self):
+        self.processes = {}
+        self.proc_pid = []
+        # self.proc_handle = self.create_process_handle_dict(self.proc_pid)
+
         self.obj = 'process'
         self.item = 'ID Process'
 
@@ -30,32 +34,32 @@ class System:
         """
 
         return get_registry_value(
-                "HKEY_LOCAL_MACHINE",
-                "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
-                "ProductName")
+            "HKEY_LOCAL_MACHINE",
+            "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+            "ProductName")
 
-    def get_processes_list(self):
+    def get_processes_dict(self):
         """
         returns an ID processes lis
         :return: proc_handle (list)
         """
 
-        global proc_ids
         try:
             # Getting all processes name
-            junk, proc_list = win32pdh.EnumObjectItems(None, None, self.obj, win32pdh.PERF_DETAIL_WIZARD)
+            junk, proc_name = win32pdh.EnumObjectItems(None, None, self.obj, win32pdh.PERF_DETAIL_WIZARD)
 
-            proc_dict = {}
+            instances = {}
 
-            for instance in proc_list:
-                if instance in proc_dict:
-                    proc_dict[instance] += 1
+            for instance in proc_name:
+                if instance in instances:
+                    instances[instance] += 1
                 else:
-                    proc_dict[instance] = 0
+                    instances[instance] = 0
 
             proc_ids = []
+            proc_pid_name = {}
 
-            for instance, max_instances in proc_dict.items():
+            for instance, max_instances in instances.items():
                 for inum in xrange(max_instances + 1):
                     try:
                         hq = win32pdh.OpenQuery()  # initializes the query handle
@@ -63,32 +67,43 @@ class System:
                         counter_handle = win32pdh.AddCounter(hq, path)  # convert counter path to counter handle
                         win32pdh.CollectQueryData(hq)  # collects data for the counter
                         type, val = win32pdh.GetFormattedCounterValue(counter_handle, win32pdh.PDH_FMT_LONG)
+
                         proc_ids.append(val)
+                        proc_pid_name[val] = [instance]
+
                         win32pdh.CloseQuery(hq)
                     except:
                         raise OSError("Problem getting process id")
 
+            proc_ids = filter(lambda hproc: hproc != 0, proc_ids)
             proc_ids.sort()
+            return proc_pid_name
 
         except:
             try:
                 from win32com.client import GetObject
                 WMI = GetObject('winmgmts:')  # COM object
                 proc_instances = WMI.InstancesOf('Win32_Process')  # WMI instanse
-                proc_list = [process.Properties_('ProcessId').Value for process in
+
+                proc_name = [process.Properties_('Name').Value for process in
                              proc_instances]  # Get the processess names
-                proc_ids = proc_list
+
+                proc_id = [process.Properties_('ProcessId').Value for process in
+                           proc_instances]  # Get the processess names
+
+                proc_pid_name = {}
+
+                proc_id_counter = 0
+                for instance in range(len(proc_name)):
+                    proc_pid_name[proc_id[instance]] = [(proc_name[instance])]
+                    proc_id_counter += 1
+
+                proc_ids = filter(lambda hproc: hproc != 0, proc_name)
+                proc_ids.sort()
+                return proc_pid_name
+
             except:
                 raise OSError('Counldn\'t get the process list')
-
-        proc_handle = []
-
-        # Creates a process handle list
-        for pid in proc_ids:
-            proc_handle.append(ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, pid))
-
-        result = filter(lambda hproc: hproc != 0, proc_handle)
-        return result
 
     def get_windows(self):
         """
@@ -116,9 +131,34 @@ class System:
         EnumWindows(EnumWindowsProc(foreach_window), 0)  # Callback
         return titles
 
+    def create_process_handle_dict(self, procsses):
+        for pid in procsses.keys():
+            proc_handle = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, pid)
+            procsses[pid].append(proc_handle)
+
+    def close_process_handle(self, hproc):
+        ctypes.windll.Kernel32.CloseHandle(hproc)
+
     def run(self):
-        # TODO: make an update function for the processes
-        pass
+        new_pid_dict = self.get_processes_dict()
+
+        if not new_pid_dict:
+            return
+
+        new_processes = set(new_pid_dict) - set(self.processes)
+        closed_processes = set(self.processes) - set(new_pid_dict)
+
+        if len(new_processes) > 0:
+            self.create_process_handle_dict(new_pid_dict)
+            for pid in new_processes:
+                self.processes.update({pid: new_pid_dict[pid]})
+                print self.processes
+
+        if len(closed_processes) > 0:
+            for pid in closed_processes:
+                self.close_process_handle(self.processes[pid][1])  # The place of 1 is the process handle
+                self.processes.pop(pid, None)
+            print self.processes
 
 
 # s = System()
@@ -141,9 +181,9 @@ def GetSystemTimes():
 
     success = __GetSystemTimes(
 
-            byref(idleTime),
-            byref(kernelTime),
-            byref(userTime))
+        byref(idleTime),
+        byref(kernelTime),
+        byref(userTime))
 
     assert success, ctypes.WinError(ctypes.GetLastError())[1]
 
@@ -164,9 +204,9 @@ class CPU:
         :return: CPU model (string)
         """
         return get_registry_value(
-                "HKEY_LOCAL_MACHINE",
-                "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
-                "ProcessorNameString")
+            "HKEY_LOCAL_MACHINE",
+            "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+            "ProcessorNameString")
 
     def cpu_utilization(self):
         """
@@ -332,7 +372,7 @@ class Network:
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
-        self.conn.bind(("10.92.5.59", 0))
+        self.conn.bind(("10.0.0.11", 0))
 
         # Include IP headers
         self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)

@@ -14,7 +14,7 @@ class Monitor(object):
     def cpu_warning(self, hcpu, hproc):
         """
         Seeing a process if suspicious or not.
-        This function is ivoked if a sepcific process usage is up to 20%
+        This function is ivoked when a sepcific process usage is up to 20%
 
         :param hcpu: CPU() handler
         :param hproc: process handler
@@ -49,7 +49,7 @@ class Monitor(object):
         self.segments.append(segment)
 
     def Network_warning(self):
-        # TODO: make a checking for UDP flood
+        # TODO: make a code for UDP flood
         """
         Seeing for DDOS attack in TCP and UDP
         :return: None
@@ -64,11 +64,11 @@ class Monitor(object):
                 if (segment['flag_syn'] is 1) and passed_it:
                     start_suspicious_time = time.time()  # Starts counting the time
                     self.main_segment = segment  # Saves the segment
-                    passed_it = False  # Ensures that the program wont repeat this code again
+                    passed_it = False  # Ensures that the program wont repeat this condition again
 
                 else:
 
-                    # DDOS attack checking
+                    # TCP DDOS attack testing
                     if (segment['flag_syn'] is 1) and (segment['dest_port'] == self.main_segment['dest_port']):
                         self.suspicious_segment_counter += 1  # Increased by 1
                         self.suspicious_segments.append(segment)  # Adding to the list

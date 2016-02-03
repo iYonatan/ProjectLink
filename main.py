@@ -3,6 +3,10 @@ from System import *
 from Monitor import *
 
 
+def system_handler(hsys):
+    pass
+
+
 def process_handler(hcpu, hproc):
     hcpu.run(hproc)
 
@@ -26,11 +30,16 @@ m = Memory()
 d = Disk()
 n = Network(monitor)
 
-hprocs = s.get_processes_list()
+s.processes = s.get_processes_dict()
+s.create_process_handle_dict(s.processes)
+# print s.processes
 
-for proc in hprocs:
-    monitor_cpu_thread = Thread(target=process_handler, args=(c, proc))
-    monitor_cpu_thread.start()
+while True:
+    hprocs = s.run()
+
+    # for proc in hprocs:
+    #     monitor_cpu_thread = Thread(target=process_handler, args=(c, proc))
+    #     monitor_cpu_thread.start()
 
 
 # monitor_cpu_thread = Thread(target=monitor.cpu_warning)
