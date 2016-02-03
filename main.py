@@ -32,15 +32,17 @@ n = Network(monitor)
 
 s.processes = s.get_processes_dict()
 s.create_process_handle_dict(s.processes)
-# print s.processes
+
+for proc in s.processes:
+    monitor_cpu_thread = Thread(target=process_handler, args=(c, s.processes[proc]))
+    monitor_cpu_thread.start()
 
 while True:
-    hprocs = s.run()
-
-    # for proc in hprocs:
-    #     monitor_cpu_thread = Thread(target=process_handler, args=(c, proc))
-    #     monitor_cpu_thread.start()
-
+    opened_proc, closed_proc = s.run()
+    if len(opened_proc) > 0:
+        for proc in opened_proc:
+            monitor_cpu_thread = Thread(target=process_handler, args=(c, opened_proc[proc]))
+            monitor_cpu_thread.start()
 
 # monitor_cpu_thread = Thread(target=monitor.cpu_warning)
 # network_thread = Thread(target=n.run)

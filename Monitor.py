@@ -11,16 +11,18 @@ class Monitor(object):
 
         self.suspicious_processes = []
 
-    def cpu_warning(self, hcpu, hproc):
+    def cpu_warning(self, hcpu, proc):
         """
         Seeing a process if suspicious or not.
         This function is ivoked when a sepcific process usage is up to 20%
 
         :param hcpu: CPU() handler
-        :param hproc: process handler
+        :param proc: process handler
         :return: if suspicious (Boolean) and process handler (hprocess)
         """
         start = time.time()
+        proc_name = proc[0]
+        hproc = proc[1]
         while True:
             usage = hcpu.cpu_process_util(hproc)
 
@@ -30,8 +32,8 @@ class Monitor(object):
             now = time.time()
 
             if (now - start) > 20:
-                self.suspicious_processes.append(hproc)
-                print "Suspicious process has been found: {} has {}%".format(str(hproc), str(usage))
+                self.suspicious_processes.append(proc_name)
+                print "Suspicious process has been found: {} has {}%".format(str(proc_name), str(usage))
                 return True, usage
 
     def memory_warning(self):

@@ -13,7 +13,7 @@ import struct
 from functions import *
 from pywin32_Structs import *
 
-proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 7096)
+# proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 7096)
 
 
 # ============================================================================ System
@@ -21,9 +21,6 @@ proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 7096)
 class System:
     def __init__(self):
         self.processes = {}
-        self.proc_pid = []
-        # self.proc_handle = self.create_process_handle_dict(self.proc_pid)
-
         self.obj = 'process'
         self.item = 'ID Process'
 
@@ -56,7 +53,6 @@ class System:
                 else:
                     instances[instance] = 0
 
-            proc_ids = []
             proc_pid_name = {}
 
             for instance, max_instances in instances.items():
@@ -68,15 +64,12 @@ class System:
                         win32pdh.CollectQueryData(hq)  # collects data for the counter
                         type, val = win32pdh.GetFormattedCounterValue(counter_handle, win32pdh.PDH_FMT_LONG)
 
-                        proc_ids.append(val)
                         proc_pid_name[val] = [instance]
 
                         win32pdh.CloseQuery(hq)
                     except:
                         raise OSError("Problem getting process id")
 
-            proc_ids = filter(lambda hproc: hproc != 0, proc_ids)
-            proc_ids.sort()
             return proc_pid_name
 
         except:
@@ -98,8 +91,6 @@ class System:
                     proc_pid_name[proc_id[instance]] = [(proc_name[instance])]
                     proc_id_counter += 1
 
-                proc_ids = filter(lambda hproc: hproc != 0, proc_name)
-                proc_ids.sort()
                 return proc_pid_name
 
             except:
@@ -132,7 +123,7 @@ class System:
         return titles
 
     def create_process_handle_dict(self, procsses):
-        for pid in procsses.keys():
+        for pid in procsses:
             proc_handle = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, pid)
             procsses[pid].append(proc_handle)
 
@@ -148,23 +139,22 @@ class System:
         new_processes = set(new_pid_dict) - set(self.processes)
         closed_processes = set(self.processes) - set(new_pid_dict)
 
+        new_processes_dict = {}
+        closed_processes_dict = {}
+
         if len(new_processes) > 0:
             self.create_process_handle_dict(new_pid_dict)
             for pid in new_processes:
                 self.processes.update({pid: new_pid_dict[pid]})
-                print self.processes
+                new_processes_dict.update({pid: new_pid_dict[pid]})
 
         if len(closed_processes) > 0:
             for pid in closed_processes:
+                closed_processes_dict.update({pid: self.processes[pid]})
                 self.close_process_handle(self.processes[pid][1])  # The place of 1 is the process handle
                 self.processes.pop(pid, None)
-            print self.processes
 
-
-# s = System()
-# print "# ============================================================================ # System"
-# print s.get_os_version()
-
+        return new_processes_dict, closed_processes_dict
 
 # ============================================================================ CPU
 # TODO: (?) Make a dll for the function GetSystemTimes() and cpu_process_util()
@@ -270,21 +260,23 @@ class CPU:
         proc_utilization = (100 * proc_total_time) / self.sys
         return proc_utilization
 
-    def run(self, hproc):
+    def run(self, proc):
         while True:
             cpu_usage = self.cpu_utilization()
             if cpu_usage > 30:
-                process_usage = self.cpu_process_util(hproc)
+                try:
+                    process_usage = self.cpu_process_util(proc[1])
+                except:
+                    break
                 if process_usage > 20:
-                    suspicious = self.monitor.cpu_warning(self, hproc)
+                    suspicious = self.monitor.cpu_warning(self, proc)
                     if not suspicious[0]:
                         continue
 
 
-# print "# ============================================================================ # CPU"
-
-
 # ============================================================================ Memory
+
+
 class Memory:
     def __init__(self):
         pass
@@ -314,11 +306,6 @@ class Memory:
             raise ctypes.WinError()
 
         return counters.WorkingSetSize
-
-
-# m = Memory()
-# print "# ============================================================================ # Memory"
-# print [bytes2human(ram) for ram in m.memory_ram()]
 
 
 # ============================================================================ Disk
@@ -356,14 +343,7 @@ class Disk:
                                      'free': bytes2human(free.value)}
 
 
-# d = Disk()
-# print "# ============================================================================ # Disk"
-# print d.disk_dict
-
-
 # ============================================================================ Network
-# TODO: Packet sniffer for: IP, TCP, UDP, ICMP
-
 
 class Network:
     def __init__(self, monitor):
@@ -509,5 +489,3 @@ class Network:
             else:
                 continue
                 # print(TAB_1 + 'Other IPv4 Data...')
-
-# print "# ============================================================================ # Network"
