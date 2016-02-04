@@ -261,11 +261,16 @@ class CPU:
         return proc_utilization
 
     def run(self, proc):
+
+        pid = proc.keys()[0]
+        name_proc = proc[pid][0]
+        handle_proc = proc[pid][1]
+
         while True:
             cpu_usage = self.cpu_utilization()
             if cpu_usage > 30:
                 try:
-                    process_usage = self.cpu_process_util(proc[1])
+                    process_usage = self.cpu_process_util(handle_proc)
                 except:
                     break
                 if process_usage > 20:
@@ -352,7 +357,7 @@ class Network:
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
-        self.conn.bind(("10.0.0.11", 0))
+        self.conn.bind(("10.92.5.59", 0))
 
         # Include IP headers
         self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
@@ -379,7 +384,7 @@ class Network:
         version = version_header_length >> 4
         header_length = (version_header_length & 15) * 4
 
-        return version, ttl, proto, self.get_ipv4_addr(src), self.get_ipv4_addr(target), data[20:]
+        return version, ttl, proto, self.get_ipv4_addr(src), self.get_ipv4_addr(target), data[header_length:]
 
     def ICMP_packet(self, data):
         """
@@ -419,11 +424,8 @@ class Network:
         return src_port, dest_port, checksum, data[8:]
 
     def run(self):
-        TAB_1 = '\t - '
-        TAB_2 = '\t\t - '
-        TAB_3 = '\t\t\t - '
-
         # TODO: Gets computer's ip through the config file
+
         print "Continue...."
 
         while True:
@@ -483,7 +485,7 @@ class Network:
                 (src_port, dest_port, length, data) = self.UDP_segment(data)
                 # # region Print
                 # print TAB_1 + "UDP segment:"
-                # print (TAB_2 + 'Source Port: {}, Destination Port: {}, Length: {}'.format(src_port, dest_port, length))
+                # print ('Source Port: {}, Destination Port: {}, Length: {}'.format(src_port, dest_port, length))
                 # # endregion
 
             else:

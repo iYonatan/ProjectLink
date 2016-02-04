@@ -21,19 +21,25 @@ class Monitor(object):
         :return: if suspicious (Boolean) and process handler (hprocess)
         """
         start = time.time()
-        proc_name = proc[0]
-        hproc = proc[1]
-        while True:
-            usage = hcpu.cpu_process_util(hproc)
 
+        pid = proc.keys()[0]
+        name_proc = proc[pid][0]
+        handle_proc = proc[pid][1]
+
+        while True:
+            try:
+                usage = hcpu.cpu_process_util(handle_proc)
+            except:
+                break
             if usage < 20:
                 return False, usage
 
             now = time.time()
 
             if (now - start) > 20:
-                self.suspicious_processes.append(proc_name)
-                print "Suspicious process has been found: {} has {}%".format(str(proc_name), str(usage))
+                self.suspicious_processes.append(name_proc)
+                print "Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc), str(pid),
+                                                                                       str(usage))
                 return True, usage
 
     def memory_warning(self):
@@ -74,7 +80,7 @@ class Monitor(object):
                     if (segment['flag_syn'] is 1) and (segment['dest_port'] == self.main_segment['dest_port']):
                         self.suspicious_segment_counter += 1  # Increased by 1
                         self.suspicious_segments.append(segment)  # Adding to the list
-                        # print "Flag syn is 1 and destination port is the same"
+                        print "Flag syn is 1 and destination port is the same"
                         # print self.main_segment['dest_port']
                         # print segment
 
