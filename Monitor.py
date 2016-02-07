@@ -3,13 +3,9 @@ import time
 
 class Monitor(object):
     def __init__(self):
+        self.IP = '10.0.0.11'
         self.segments = []  # Collects the segments
-        # Declare a specific segment for checking if the other segments have the same dest port in short time
-        self.main_segment = None
-        self.suspicious_segment_counter = 0
-        self.suspicious_segments = []
-
-        self.suspicious_processes = []
+        self.segments_dict = {}
 
     def cpu_warning(self, hcpu, proc):
         """
@@ -62,51 +58,37 @@ class Monitor(object):
         Seeing for DDOS attack in TCP and UDP
         :return: None
         """
-        start_suspicious_time = None
-        passed_it = True
+        main_segment = {}
 
         while True:
+
             for segment in self.segments:
+                main_segment = segment
 
-                # TODO: Check if the source IP is not the local coputer's ID
-                if (segment['flag_syn'] is 1) and passed_it:
-                    start_suspicious_time = time.time()  # Starts counting the time
-                    self.main_segment = segment  # Saves the segment
-                    passed_it = False  # Ensures that the program wont repeat this condition again
-
+                if not self.segments_dict.has_key(segment['dest_port']):
+                    self.segments_dict[segment['dest_port']] = [int()]
+                    self.segments_dict[segment['dest_port']].append(time.time())
                 else:
-
-                    # TCP DDOS attack testing
-                    if (segment['flag_syn'] is 1) and (segment['dest_port'] == self.main_segment['dest_port']):
-                        self.suspicious_segment_counter += 1  # Increased by 1
-                        self.suspicious_segments.append(segment)  # Adding to the list
-                        print "Flag syn is 1 and destination port is the same"
-                        # print self.main_segment['dest_port']
-                        # print segment
-
-                        # If 500 packets have been found ...
-                        if self.suspicious_segment_counter >= 500:
-                            end_suspicious_time = time.time()  # Stops the time
-                            critic_time = round(end_suspicious_time - start_suspicious_time)  # In seconds
-                            # print "suspicious_segment_counter >= 500"
-
-                            # If the sub of the time since the first packe until now is between 2 to 3 ...
-                            if (2 < critic_time < 3) and (all(segment == self.main_segment['src_ip'] for segment in
-                                                              self.suspicious_segments)):
-                                print "DDOS Attack! wake up!!!!"
-
-                            elif critic_time < 1:
-                                print "DDOS Attack! wake up!!!!"
-
-                            else:
-                                self.suspicious_segments = []  # Reset
-                                self.suspicious_segment_counter = 0  # Reset
-                                passed_it = True  # Reset
-                                # print "RESET"
-
-                    else:
-                        self.suspicious_segments = []  # Reset
-                        self.suspicious_segment_counter = 0  # Reset
-                        passed_it = True  # Reset
+                    self.segments.remove(segment)
+                    break
 
                 self.segments.remove(segment)
+
+            try:
+                self.segments_dict[main_segment['dest_port']][0] += 1
+                print "segment: {} || Counter is: {}".format(str(main_segment),
+                                                             str(self.segments_dict[main_segment['dest_port']]))
+                main_segment = {}
+                now = time.time()
+                for _, value in self.segments_dict:
+                    print value
+                    if value[0] * 1 >= 100:  # Number of packets in a particular port
+                        print now - value[1]
+                        if now - value[1] < 3:
+                            print "DDOS ATTACK!!"
+                        else:
+                            value[0] = time.time()
+
+            except:
+                main_segment = {}
+            # time.sleep(0.1)

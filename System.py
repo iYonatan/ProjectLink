@@ -13,6 +13,7 @@ import struct
 from functions import *
 from pywin32_Structs import *
 
+
 # proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 7096)
 
 
@@ -155,6 +156,7 @@ class System:
                 self.processes.pop(pid, None)
 
         return new_processes_dict, closed_processes_dict
+
 
 # ============================================================================ CPU
 # TODO: (?) Make a dll for the function GetSystemTimes() and cpu_process_util()
@@ -312,6 +314,29 @@ class Memory:
 
         return counters.WorkingSetSize
 
+    def run(self, proc):
+        def bytes2percent(smaller_num, bigger_num):
+            return int(round(smaller_num / float(bigger_num), 2) * 100)
+
+        total = self.memory_ram()[0]
+
+        # pid = proc.keys()[0]
+        # name_proc = proc[pid][0]
+        # handle_proc = proc[pid][1]
+        proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 11684)
+        while True:
+            avail = self.memory_ram()[1]
+            used = total - avail
+            used_usage = bytes2percent(used, total)
+            print used_usage
+            if used_usage > 60:
+                try:
+                    proc_usage = (self.memory_process_usage(proc) / float(used))
+                    print proc_usage
+                except:
+                    break
+            time.sleep(1)
+
 
 # ============================================================================ Disk
 
@@ -357,7 +382,7 @@ class Network:
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
-        self.conn.bind(("10.92.5.59", 0))
+        self.conn.bind(("10.0.0.11", 0))
 
         # Include IP headers
         self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
@@ -447,6 +472,7 @@ class Network:
 
             # TCP segment
             elif proto == 6:
+
                 (src_port, dest_port, sequence, ack,
                  flag_urg,
                  flag_ack,
@@ -456,28 +482,37 @@ class Network:
                  flag_fin,
                  data) = self.TCP_segment(data)
 
+                flags = {"urg": flag_urg,
+                         "ack": flag_ack,
+                         "psh": flag_psh,
+                         "rst": flag_rst,
+                         "syn": flag_syn,
+                         "fin": flag_fin}
+
+                only_syn = sum(int(v) for k, v in flags.iteritems() if k != "syn") == 0 and flags["syn"] != 0
+
                 tcp_segment = {
                     "src_ip": src,
                     "dest_ip": dest,
                     "src_port": src_port,
                     "dest_port": dest_port,
-                    "flag_syn": flag_syn
-
+                    "flag_syn": flag_syn,
                 }
-
-                self.monitor.Add_segmnet(tcp_segment)
-
+                if only_syn:
+                    self.monitor.Add_segmnet(tcp_segment)
+                # print tcp_segment
                 # # region Print
                 # print TAB_1 + "TCP segment:"
-                # print (TAB_2 + 'src_port: {}, dest_port: {}'.format(src_port, dest_port, ))
+
+                # print ('src_port: {}, dest_port: {}'.format(src_port, dest_port, ))
                 # print (
-                # TAB_3 + 'flag_urg: {}, flag_ack: {}, flag_psh: {},flag_rst: {}, flag_syn: {}, flag_fin: {}'.format(
-                #             flag_urg,
-                #             flag_ack,
-                #             flag_psh,
-                #             flag_rst,
-                #             flag_syn,
-                #             flag_fin))
+                #     'flag_urg: {}, flag_ack: {}, flag_psh: {},flag_rst: {}, flag_syn: {}, flag_fin: {}'.format(
+                #         flag_urg,
+                #         flag_ack,
+                #         flag_psh,
+                #         flag_rst,
+                #         flag_syn,
+                #         flag_fin))
                 # # endregion
 
             # UDP segment
