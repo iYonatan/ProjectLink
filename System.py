@@ -14,8 +14,7 @@ from functions import *
 from pywin32_Structs import *
 
 
-# proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 7096)
-
+# proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 14436)
 
 # ============================================================================ System
 
@@ -265,7 +264,6 @@ class CPU:
     def run(self, proc):
 
         pid = proc.keys()[0]
-        name_proc = proc[pid][0]
         handle_proc = proc[pid][1]
 
         while True:
@@ -382,7 +380,7 @@ class Network:
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
-        self.conn.bind(("10.0.0.11", 0))
+        self.conn.bind(("192.168.1.12", 0))
 
         # Include IP headers
         self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
@@ -451,7 +449,7 @@ class Network:
     def run(self):
         # TODO: Gets computer's ip through the config file
 
-        print "Continue...."
+        print "-- Sniffer is ready --"
 
         while True:
             raw_data, addr = self.conn.recvfrom(65535)
@@ -500,20 +498,20 @@ class Network:
                 }
                 if only_syn:
                     self.monitor.Add_segmnet(tcp_segment)
-                # print tcp_segment
-                # # region Print
-                # print TAB_1 + "TCP segment:"
+                    # print tcp_segment
+                    # # region Print
+                    # print TAB_1 + "TCP segment:"
 
-                # print ('src_port: {}, dest_port: {}'.format(src_port, dest_port, ))
-                # print (
-                #     'flag_urg: {}, flag_ack: {}, flag_psh: {},flag_rst: {}, flag_syn: {}, flag_fin: {}'.format(
-                #         flag_urg,
-                #         flag_ack,
-                #         flag_psh,
-                #         flag_rst,
-                #         flag_syn,
-                #         flag_fin))
-                # # endregion
+                    # print ('src_port: {}, dest_port: {}'.format(src_port, dest_port, ))
+                    # print (
+                    #     'flag_urg: {}, flag_ack: {}, flag_psh: {},flag_rst: {}, flag_syn: {}, flag_fin: {}'.format(
+                    #         flag_urg,
+                    #         flag_ack,
+                    #         flag_psh,
+                    #         flag_rst,
+                    #         flag_syn,
+                    #         flag_fin))
+                    # # endregion
 
             # UDP segment
             elif proto == 17:

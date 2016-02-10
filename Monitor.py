@@ -7,6 +7,8 @@ class Monitor(object):
         self.segments = []  # Collects the segments
         self.segments_dict = {}
 
+        self.suspicious_processes = []
+
     def cpu_warning(self, hcpu, proc):
         """
         Seeing a process if suspicious or not.
@@ -55,7 +57,7 @@ class Monitor(object):
     def Network_warning(self):
         # TODO: make a code for UDP flood
         """
-        Seeing for DDOS attack in TCP and UDP
+        Seeing for DDOS attack in TCP (SYN flood)
         :return: None
         """
         main_segment = {}
@@ -64,7 +66,6 @@ class Monitor(object):
 
             for segment in self.segments:
                 main_segment = segment
-
                 if not self.segments_dict.has_key(segment['dest_port']):
                     self.segments_dict[segment['dest_port']] = [int()]
                     self.segments_dict[segment['dest_port']].append(time.time())
@@ -76,19 +77,17 @@ class Monitor(object):
 
             try:
                 self.segments_dict[main_segment['dest_port']][0] += 1
-                print "segment: {} || Counter is: {}".format(str(main_segment),
-                                                             str(self.segments_dict[main_segment['dest_port']]))
+                # print "segment: {} || Counter is: {}".format(str(main_segment),
+                #                                              str(self.segments_dict[main_segment['dest_port']]))
                 main_segment = {}
                 now = time.time()
-                for _, value in self.segments_dict:
-                    print value
-                    if value[0] * 1 >= 100:  # Number of packets in a particular port
-                        print now - value[1]
-                        if now - value[1] < 3:
+                for key, value in self.segments_dict.items():
+                    if value[0] % 100 == 0:  # Number of packets in a particular port
+                        if now - value[1] < 11:
                             print "DDOS ATTACK!!"
+
                         else:
-                            value[0] = time.time()
+                            value[1] = time.time()
 
             except:
                 main_segment = {}
-            # time.sleep(0.1)

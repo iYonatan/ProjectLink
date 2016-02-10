@@ -1,7 +1,12 @@
 from ConfigParser import SafeConfigParser
+from ctypes import *
+from pywin32_Structs import *
 
 parser = SafeConfigParser()
 parser.read('Config.ini')
 
-SLEEP_TIME_1_5 = parser.get('Pywin32', 'KERNEL_32')
-print SLEEP_TIME_1_5
+ICMP = int(parser.get('Socket', 'ICMP'))
+
+parser.set('Socket', 'ICMP', str(16))
+ICMP = int(parser.get('Socket', 'ICMP'))
+print ICMP

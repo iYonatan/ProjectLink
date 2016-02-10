@@ -1,3 +1,5 @@
-d = {'A': [1, 2], 'B': [3, 4]}
-for _, value in d.items():
-    print value[1]
+from Configuration import *
+
+cfg = Config()
+cfg.ICMP = 2
+print cfg.ICMP
