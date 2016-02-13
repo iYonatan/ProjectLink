@@ -158,31 +158,6 @@ class System:
 
 
 # ============================================================================ CPU
-# TODO: (?) Make a dll for the function GetSystemTimes() and cpu_process_util()
-
-
-def GetSystemTimes():
-    """
-    Uses the function GetSystemTimes() (win32) in order to get the user mode time, kernel mode time and idle mode time
-    :return: user time, kernel time and idle time (Dictinary)
-    """
-
-    __GetSystemTimes = windll.kernel32.GetSystemTimes
-    idleTime, kernelTime, userTime = FILETIME(), FILETIME(), FILETIME()
-
-    success = __GetSystemTimes(
-
-        byref(idleTime),
-        byref(kernelTime),
-        byref(userTime))
-
-    assert success, ctypes.WinError(ctypes.GetLastError())[1]
-
-    return {
-        "idleTime": idleTime.dwLowDateTime,
-        "kernelTime": kernelTime.dwLowDateTime,
-        "userTime": userTime.dwLowDateTime}
-
 
 class CPU:
     def __init__(self, monitor):
@@ -199,6 +174,29 @@ class CPU:
             "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
             "ProcessorNameString")
 
+    def GetSystemTimes(self):
+        # TODO: (?) Make a dll for the function GetSystemTimes() and cpu_process_util()
+        """
+        Uses the function GetSystemTimes() (win32) in order to get the user mode time, kernel mode time and idle mode time
+        :return: user time, kernel time and idle time (Dictinary)
+        """
+
+        __GetSystemTimes = windll.kernel32.GetSystemTimes
+        idleTime, kernelTime, userTime = FILETIME(), FILETIME(), FILETIME()
+
+        success = __GetSystemTimes(
+
+            byref(idleTime),
+            byref(kernelTime),
+            byref(userTime))
+
+        assert success, ctypes.WinError(ctypes.GetLastError())[1]
+
+        return {
+            "idleTime": idleTime.dwLowDateTime,
+            "kernelTime": kernelTime.dwLowDateTime,
+            "userTime": userTime.dwLowDateTime}
+
     def cpu_utilization(self):
         """
         Returns the total cpu usage
@@ -207,9 +205,9 @@ class CPU:
         :return: CPU usage (int)
         """
 
-        FirstSystemTimes = GetSystemTimes()
+        FirstSystemTimes = self.GetSystemTimes()
         time.sleep(0.3)
-        SecSystemTimes = GetSystemTimes()
+        SecSystemTimes = self.GetSystemTimes()
 
         """
          CPU usage is calculated by getting the total amount of time
@@ -221,7 +219,6 @@ class CPU:
         usr = SecSystemTimes['userTime'] - FirstSystemTimes['userTime']
         ker = SecSystemTimes['kernelTime'] - FirstSystemTimes['kernelTime']
         idl = SecSystemTimes['idleTime'] - FirstSystemTimes['idleTime']
-
         self.sys = usr + ker
         return int((self.sys - idl) * 100 / self.sys)
 
@@ -283,8 +280,8 @@ class CPU:
 
 
 class Memory:
-    def __init__(self):
-        pass
+    def __init__(self, monitor):
+        self.monitor = monitor
 
     def memory_ram(self):
         """
@@ -313,32 +310,33 @@ class Memory:
         return counters.WorkingSetSize
 
     def run(self, proc):
-        def bytes2percent(smaller_num, bigger_num):
-            return int(round(smaller_num / float(bigger_num), 2) * 100)
-
         total = self.memory_ram()[0]
 
-        # pid = proc.keys()[0]
-        # name_proc = proc[pid][0]
-        # handle_proc = proc[pid][1]
-        proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 11684)
+        pid = proc.keys()[0]
+        proc_name = proc[pid][0]
+        handle_proc = proc[pid][1]
+
         while True:
             avail = self.memory_ram()[1]
             used = total - avail
             used_usage = bytes2percent(used, total)
-            print used_usage
-            if used_usage > 60:
+            if used_usage > 40:
                 try:
-                    proc_usage = (self.memory_process_usage(proc) / float(used))
-                    print proc_usage
+                    proc_usage = bytes2percent(self.memory_process_usage(handle_proc), used)
                 except:
                     break
+                if proc_usage >= 10:
+                    suspicious = self.monitor.memory_warning(self, proc, used)
+                    if not suspicious[0]:
+                        continue
             time.sleep(1)
 
 
 # ============================================================================ Disk
 
 class Disk:
+    # TODO: Get Installed applocations list names and size (the size is in bytes)
+
     def __init__(self):
         self.disk_dict = {}
         self.disk_get_partitions()
@@ -369,6 +367,12 @@ class Disk:
             GetDiskFreeSpaceExW(drive, ctypes.byref(freeuser), ctypes.byref(total), ctypes.byref(free))
             self.disk_dict[drive] = {'total': bytes2human(total.value),
                                      'free': bytes2human(free.value)}
+
+    def run(self):
+        proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 5480)
+        dict = win32process.GetProcessIoCounters(proc)
+        for key in dict:
+            print key, bytes2human(dict[key])
 
 
 # ============================================================================ Network

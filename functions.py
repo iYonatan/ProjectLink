@@ -23,6 +23,10 @@ def bytes2human(n):
     return "%sB" % n
 
 
+def bytes2percent(smaller_num, bigger_num):
+    return int(round(smaller_num / float(bigger_num), 2) * 100)
+
+
 def get_registry_value(key, subkey, value):
     """
     Finds a value from the registry editor in windows

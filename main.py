@@ -24,39 +24,40 @@ def network_handler():
 monitor = Monitor()
 s = System()
 c = CPU(monitor)
-m = Memory()
+m = Memory(monitor)
 d = Disk()
 n = Network(monitor)
 
-# m.run(None)
 
-network_thread = Thread(target=n.run)
-monitor_network_thread = Thread(target=monitor.Network_warning)
+d.run()
 
-network_thread.start()
-monitor_network_thread.start()
-
-s.processes = s.get_processes_dict()
-s.create_process_handle_dict(s.processes)
-
-for proc in s.processes:
-    monitor_cpu_thread = Thread(target=process_handler, args=(c, proc, s.processes[proc]))
-    monitor_cpu_thread.start()
-
-    # monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
-    # monitor_memory_thread.start()
-
-while True:
-    opened_proc, closed_proc = s.run()
-    if len(opened_proc) > 0:
-        for proc in opened_proc:
-            monitor_cpu_thread = Thread(target=process_handler, args=(c, proc, opened_proc[proc]))
-            monitor_cpu_thread.start()
-
-            # monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
-            # monitor_memory_thread.start()
-
-    if len(closed_proc) > 0:
-        pass
-
-    time.sleep(1)
+# network_thread = Thread(target=n.run)
+# monitor_network_thread = Thread(target=monitor.Network_warning)
+#
+# network_thread.start()
+# monitor_network_thread.start()
+#
+# s.processes = s.get_processes_dict()
+# s.create_process_handle_dict(s.processes)
+#
+# for proc in s.processes:
+#     monitor_cpu_thread = Thread(target=process_handler, args=(c, proc, s.processes[proc]))
+#     monitor_cpu_thread.start()
+#
+#     monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
+#     monitor_memory_thread.start()
+#
+# while True:
+#     opened_proc, closed_proc = s.run()
+#     if len(opened_proc) > 0:
+#         for proc in opened_proc:
+#             monitor_cpu_thread = Thread(target=process_handler, args=(c, proc, opened_proc[proc]))
+#             monitor_cpu_thread.start()
+#
+#             monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
+#             monitor_memory_thread.start()
+#
+#     if len(closed_proc) > 0:
+#         pass
+#
+#     time.sleep(1)

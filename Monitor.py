@@ -1,4 +1,5 @@
 import time
+from functions import *
 
 
 class Monitor(object):
@@ -14,7 +15,7 @@ class Monitor(object):
         Seeing a process if suspicious or not.
         This function is ivoked when a sepcific process usage is up to 20%
 
-        :param hcpu: CPU() handler
+        :param hcpu: CPU() instance
         :param proc: process handler
         :return: if suspicious (Boolean) and process handler (hprocess)
         """
@@ -36,12 +37,42 @@ class Monitor(object):
 
             if (now - start) > 20:
                 self.suspicious_processes.append(name_proc)
-                print "Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc), str(pid),
-                                                                                       str(usage))
+                print "(CPU) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc), str(pid),
+                                                                                             str(usage))
                 return True, usage
 
-    def memory_warning(self):
-        pass
+    def memory_warning(self, hmemo, proc, used):
+        """
+        Seeing a process if suspicious or not.
+        This function is ivoked when a sepcific process memory usage is up to 10%
+
+        :param used: The used memory in percent
+        :param hmemo: Memory() instance
+        :param proc: process handler
+        :return: if suspicious (Boolean) and process handler (hprocess)
+        """
+        start = time.time()
+
+        pid = proc.keys()[0]
+        name_proc = proc[pid][0]
+        handle_proc = proc[pid][1]
+
+        while True:
+            try:
+                proc_usage = bytes2percent(hmemo.memory_process_usage(handle_proc), used)
+            except:
+                break
+            if proc_usage < 10:
+                return False, proc_usage
+
+            now = time.time()
+
+            if (now - start) > 20:
+                self.suspicious_processes.append(name_proc)
+                print "(Memory) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc),
+                                                                                                str(pid),
+                                                                                                str(proc_usage))
+                return True, proc_usage
 
     def disk_warning(self):
         pass
@@ -63,7 +94,6 @@ class Monitor(object):
         main_segment = {}
 
         while True:
-
             for segment in self.segments:
                 main_segment = segment
                 if not self.segments_dict.has_key(segment['dest_port']):
@@ -83,7 +113,7 @@ class Monitor(object):
                 now = time.time()
                 for key, value in self.segments_dict.items():
                     if value[0] % 100 == 0:  # Number of packets in a particular port
-                        if now - value[1] < 11:
+                        if now - value[1] < 3:
                             print "DDOS ATTACK!!"
 
                         else:
