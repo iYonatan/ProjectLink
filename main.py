@@ -1,6 +1,16 @@
+from __future__ import division
+from __future__ import print_function
+
 from threading import Thread
 from Monitor import *
 from System import *
+
+monitor = Monitor()
+s = System()
+c = CPU(monitor)
+m = Memory(monitor)
+d = Disk()
+n = Network(monitor)
 
 
 def process_handler(hcpu, pid, name_handle_proc):
@@ -18,46 +28,41 @@ def disk_handler():
 
 
 def network_handler():
-    pass
+    network_thread = Thread(target=n.run)
+    monitor_network_thread = Thread(target=monitor.Network_warning)
+
+    network_thread.start()
+    monitor_network_thread.start()
 
 
-monitor = Monitor()
-s = System()
-c = CPU(monitor)
-m = Memory(monitor)
-d = Disk()
-n = Network(monitor)
+def main():
+    network_handler()
+
+    s.processes = s.get_processes_dict()
+    s.create_process_handle_dict(s.processes)
+
+    for proc in s.processes:
+        monitor_cpu_thread = Thread(target=process_handler, args=(c, proc, s.processes[proc]))
+        monitor_cpu_thread.start()
+
+        monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
+        monitor_memory_thread.start()
+
+    while True:
+        opened_proc, closed_proc = s.run()
+        if len(opened_proc) > 0:
+            for proc in opened_proc:
+                monitor_cpu_thread = Thread(target=process_handler, args=(c, proc, opened_proc[proc]))
+                monitor_cpu_thread.start()
+
+                monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
+                monitor_memory_thread.start()
+
+        if len(closed_proc) > 0:
+            pass
+
+        time.sleep(1)
 
 
-d.run()
-
-# network_thread = Thread(target=n.run)
-# monitor_network_thread = Thread(target=monitor.Network_warning)
-#
-# network_thread.start()
-# monitor_network_thread.start()
-#
-# s.processes = s.get_processes_dict()
-# s.create_process_handle_dict(s.processes)
-#
-# for proc in s.processes:
-#     monitor_cpu_thread = Thread(target=process_handler, args=(c, proc, s.processes[proc]))
-#     monitor_cpu_thread.start()
-#
-#     monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
-#     monitor_memory_thread.start()
-#
-# while True:
-#     opened_proc, closed_proc = s.run()
-#     if len(opened_proc) > 0:
-#         for proc in opened_proc:
-#             monitor_cpu_thread = Thread(target=process_handler, args=(c, proc, opened_proc[proc]))
-#             monitor_cpu_thread.start()
-#
-#             monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
-#             monitor_memory_thread.start()
-#
-#     if len(closed_proc) > 0:
-#         pass
-#
-#     time.sleep(1)
+if __name__ == "__main__":
+    main()

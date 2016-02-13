@@ -264,6 +264,8 @@ class CPU:
         handle_proc = proc[pid][1]
 
         while True:
+            if handle_proc == 0:
+                break
             cpu_usage = self.cpu_utilization()
             if cpu_usage > 30:
                 try:
@@ -313,10 +315,11 @@ class Memory:
         total = self.memory_ram()[0]
 
         pid = proc.keys()[0]
-        proc_name = proc[pid][0]
         handle_proc = proc[pid][1]
 
         while True:
+            if handle_proc == 0:
+                break
             avail = self.memory_ram()[1]
             used = total - avail
             used_usage = bytes2percent(used, total)
