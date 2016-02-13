@@ -123,14 +123,28 @@ class System:
         return titles
 
     def create_process_handle_dict(self, procsses):
+        """
+        Creates a dictinary of process handle
+        :param procsses:
+        :return: None
+        """
         for pid in procsses:
             proc_handle = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, pid)
             procsses[pid].append(proc_handle)
 
     def close_process_handle(self, hproc):
+        """
+        Closes a given process handle
+        :param hproc: process handle
+        :return: None
+        """
         ctypes.windll.Kernel32.CloseHandle(hproc)
 
     def run(self):
+        """
+        Runs System class
+        :return:
+        """
         new_pid_dict = self.get_processes_dict()
 
         if not new_pid_dict:
@@ -259,6 +273,11 @@ class CPU:
         return proc_utilization
 
     def run(self, proc):
+        """
+        Runs CPU class
+        :param proc: A process dictinary (dict)
+        :return:
+        """
 
         pid = proc.keys()[0]
         handle_proc = proc[pid][1]
@@ -312,6 +331,11 @@ class Memory:
         return counters.WorkingSetSize
 
     def run(self, proc):
+        """
+        Runs the class
+        :param proc: process dictinary (dict)
+        :return: None
+        """
         total = self.memory_ram()[0]
 
         pid = proc.keys()[0]
@@ -372,6 +396,10 @@ class Disk:
                                      'free': bytes2human(free.value)}
 
     def run(self):
+        """
+        Runs Disk class
+        :return:
+        """
         proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 5480)
         dict = win32process.GetProcessIoCounters(proc)
         for key in dict:
@@ -454,6 +482,10 @@ class Network:
         return src_port, dest_port, checksum, data[8:]
 
     def run(self):
+        """
+        Runs Network class
+        :return:
+        """
         # TODO: Gets computer's ip through the config file
 
         print "-- Sniffer is ready --"

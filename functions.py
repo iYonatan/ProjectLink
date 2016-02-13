@@ -24,6 +24,12 @@ def bytes2human(n):
 
 
 def bytes2percent(smaller_num, bigger_num):
+    """
+    Converts bytes to percents
+    :param smaller_num: Smaller number
+    :param bigger_num: Bigger number
+    :return: The perecentege between the numbers
+    """
     return int(round(smaller_num / float(bigger_num), 2) * 100)
 
 
