@@ -1,5 +1,5 @@
-from Security import *
 import socket
+import threading
 
 BUFFER_SIZE = 2048
 
@@ -7,14 +7,15 @@ BUFFER_SIZE = 2048
 class Communication:
     def __init__(self):
 
-        HOST = 'localhost'  # The remote host
-        PORT = 8030  # The same port as used by the server
+        try:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.bind(('', 8030))
+            self.sock.listen(5)
 
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((HOST, PORT))
+        except socket.SO_ERROR:
+            print "Couldn't create the sever"
 
     def send(self, data):
-
         try:
             self.sock.send(data)
             print "The data has been sent to the server"
@@ -29,12 +30,3 @@ class Communication:
 
     def close(self):
         self.sock.close()
-
-    def run(self):
-        sec = Security()
-        self.send(sec.export_public_key())
-        comm.close()
-
-
-comm = Communication()
-comm.run()
