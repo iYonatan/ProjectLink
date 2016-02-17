@@ -26,6 +26,7 @@ class Monitor(object):
         handle_proc = proc[pid][1]
 
         while True:
+            time.sleep(1)
             try:
                 usage = hcpu.cpu_process_util(handle_proc)
             except:
@@ -58,6 +59,7 @@ class Monitor(object):
         handle_proc = proc[pid][1]
 
         while True:
+            time.sleep(1)
             try:
                 proc_usage = bytes2percent(hmemo.memory_process_usage(handle_proc), used)
             except:

@@ -1,5 +1,7 @@
 from Security import *
+
 import socket
+import cPickle
 
 BUFFER_SIZE = 2048
 
@@ -12,6 +14,7 @@ class Communication:
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((HOST, PORT))
+        self.aes_in_pbk = None
 
     def send(self, data):
 
@@ -33,6 +36,12 @@ class Communication:
     def run(self):
         sec = Security()
         self.send(sec.export_public_key())
+
+        aes_in_pbk = self.recv()
+        self.aes_in_pbk = cPickle.loads(aes_in_pbk)
+
+        sec.decrypt(self.aes_in_pbk)
+
         comm.close()
 
 

@@ -139,6 +139,7 @@ class System:
         :return: None
         """
         ctypes.windll.Kernel32.CloseHandle(hproc)
+        return
 
     def run(self):
         """
@@ -165,7 +166,8 @@ class System:
         if len(closed_processes) > 0:
             for pid in closed_processes:
                 closed_processes_dict.update({pid: self.processes[pid]})
-                self.close_process_handle(self.processes[pid][1])  # The place of 1 is the process handle
+                self.close_process_handle(self.processes[pid][1])
+                self.processes[pid][1] = 0  # The place of 1 is the process handle
                 self.processes.pop(pid, None)
 
         return new_processes_dict, closed_processes_dict
@@ -220,7 +222,7 @@ class CPU:
         """
 
         FirstSystemTimes = self.GetSystemTimes()
-        time.sleep(0.3)
+        time.sleep(1)
         SecSystemTimes = self.GetSystemTimes()
 
         """
@@ -248,7 +250,7 @@ class CPU:
         # hproc = proc
 
         FirstProcessTimes = win32process.GetProcessTimes(hproc)
-        time.sleep(0.3)
+        time.sleep(1)
         SecProcessTimes = win32process.GetProcessTimes(hproc)
 
         """
@@ -283,8 +285,10 @@ class CPU:
         handle_proc = proc[pid][1]
 
         while True:
+            time.sleep(1)
+
             if handle_proc == 0:
-                break
+                return
             cpu_usage = self.cpu_utilization()
             if cpu_usage > 30:
                 try:
@@ -342,8 +346,9 @@ class Memory:
         handle_proc = proc[pid][1]
 
         while True:
+            time.sleep(1)
             if handle_proc == 0:
-                break
+                return
             avail = self.memory_ram()[1]
             used = total - avail
             used_usage = bytes2percent(used, total)
@@ -356,7 +361,6 @@ class Memory:
                     suspicious = self.monitor.memory_warning(self, proc, used)
                     if not suspicious[0]:
                         continue
-            time.sleep(1)
 
 
 # ============================================================================ Disk
@@ -415,7 +419,7 @@ class Network:
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
-        self.conn.bind(("10.92.5.59", 0))
+        self.conn.bind(("192.168.1.12", 0))
 
         # Include IP headers
         self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)

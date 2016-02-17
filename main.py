@@ -1,6 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-
 from threading import Thread
 from Monitor import *
 from System import *
@@ -23,6 +20,7 @@ def cpu_handler(hcpu, pid, name_handle_proc):
     """
     process_dict = {pid: name_handle_proc}
     hcpu.run(process_dict)
+    return
 
 
 def memory_handler(hmemo, pid, name_handle_proc):
@@ -35,6 +33,7 @@ def memory_handler(hmemo, pid, name_handle_proc):
     """
     process_dict = {pid: name_handle_proc}
     hmemo.run(process_dict)
+    return
 
 
 def disk_handler():
@@ -70,8 +69,13 @@ def main():
         monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
         monitor_memory_thread.start()
 
+        time.sleep(1)
+
     while True:
         opened_proc, closed_proc = s.run()
+
+        time.sleep(5)
+
         if len(opened_proc) > 0:
             for proc in opened_proc:
                 monitor_cpu_thread = Thread(target=cpu_handler, args=(c, proc, opened_proc[proc]))
@@ -80,10 +84,12 @@ def main():
                 monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
                 monitor_memory_thread.start()
 
-        if len(closed_proc) > 0:
-            pass
+                time.sleep(1)
 
-        time.sleep(1)
+        if len(closed_proc) > 0:
+            continue
+
+
 
 
 if __name__ == "__main__":
