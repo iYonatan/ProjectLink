@@ -1,7 +1,5 @@
-from Security import *
-
 import socket
-import cPickle
+from Security import *
 
 BUFFER_SIZE = 2048
 
@@ -14,17 +12,19 @@ class Communication:
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((HOST, PORT))
-        self.aes_in_pbk = None
+
+        self.sec = Security()
 
     def send(self, data):
 
         try:
+            # self.sock.send(cPickle.dumps(self.sec.encrypt(data)))
             self.sock.send(data)
-            print "The data has been sent to the server"
+            print "The data: %s - has been sent to the server" % data
             return True
 
         except socket.SO_ERROR:
-            print "Couldn't send data to the server"
+            print "Couldn't send data: %s to the server" % data
             return False
 
     def recv(self):
@@ -34,16 +34,4 @@ class Communication:
         self.sock.close()
 
     def run(self):
-        sec = Security()
-        self.send(sec.export_public_key())
-
-        aes_in_pbk = self.recv()
-        self.aes_in_pbk = cPickle.loads(aes_in_pbk)
-
-        sec.decrypt(self.aes_in_pbk)
-
-        comm.close()
-
-
-comm = Communication()
-comm.run()
+        pass

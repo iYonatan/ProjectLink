@@ -1,0 +1,2 @@
+-- Sniffer firewall fix --
+https://support.realvnc.com/knowledgebase/article/View/269/12/how-do-i-allow-connections-through-my-firewall

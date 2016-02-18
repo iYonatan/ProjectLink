@@ -1,13 +1,25 @@
 from threading import Thread
 from Monitor import *
 from System import *
+from Communication import *
+
+comm = Communication()
 
 monitor = Monitor()
-s = System()
-c = CPU(monitor)
-m = Memory(monitor)
-d = Disk()
+s = System(comm)
+c = CPU(monitor, comm)
+m = Memory(monitor, comm)
+d = Disk(comm)
 n = Network(monitor)
+
+
+def CPU_MEMORY():
+    while True:
+        util = c.cpu_utilization()
+        comm.send(str(util))
+        time.sleep(3)
+        comm.send(str(m.memory_ram()))
+        time.sleep(3)
 
 
 def cpu_handler(hcpu, pid, name_handle_proc):
@@ -57,6 +69,10 @@ def main():
     This function runs everything
     :return:
     """
+
+    CPU_MEMORY_UTIL = Thread(target=CPU_MEMORY)
+    CPU_MEMORY_UTIL.start()
+
     network_handler()
 
     s.processes = s.get_processes_dict()
@@ -90,7 +106,25 @@ def main():
             continue
 
 
+def FIRST_SETUP():
+    UUID = s.get_computer_UUID()
+    USERNAME = "USERNAME"
+    PASSWORD = "PASSWORD"
+
+    comm.sec.public_key = Security.import_key(comm.recv())  # The public key from the server
+    comm.send('{} | {}'.format(USERNAME, PASSWORD))
+
+    server_response = comm.recv()
+    if server_response != '200 OK':  # The user doesn't exist
+        pass
+
+    comm.send(UUID)
+
+    # -- The server is ready to get the first data from the client -- #
+
+    # -- --------------------------------------------------------- -- #
 
 
 if __name__ == "__main__":
+    FIRST_SETUP()
     main()

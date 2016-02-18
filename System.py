@@ -1,6 +1,7 @@
 # TODO: Every error message and numbers, must be declered in the config file (config.py)
 # TODO: Declare in the config file the meaning of: callback and registry
 
+from subprocess import Popen,PIPE
 import ctypes
 import time
 import win32api
@@ -19,7 +20,9 @@ from pywin32_Structs import *
 # ============================================================================ System
 
 class System:
-    def __init__(self):
+    def __init__(self, comm):
+        self.comm = comm
+
         self.processes = {}
         self.obj = 'process'
         self.item = 'ID Process'
@@ -34,6 +37,10 @@ class System:
             "HKEY_LOCAL_MACHINE",
             "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
             "ProductName")
+
+    def get_computer_UUID(self):
+        uuid = Popen(['wmic', 'csproduct', 'get', 'UUID'], stdout=PIPE, stdin=PIPE)
+        return uuid.communicate()[0].split()[1]
 
     def get_processes_dict(self):
         """
@@ -176,7 +183,8 @@ class System:
 # ============================================================================ CPU
 
 class CPU:
-    def __init__(self, monitor):
+    def __init__(self, monitor, comm):
+        self.comm = comm
         self.sys = None
         self.monitor = monitor
 
@@ -283,12 +291,12 @@ class CPU:
 
         pid = proc.keys()[0]
         handle_proc = proc[pid][1]
-
         while True:
             time.sleep(1)
 
             if handle_proc == 0:
                 return
+
             cpu_usage = self.cpu_utilization()
             if cpu_usage > 30:
                 try:
@@ -305,7 +313,8 @@ class CPU:
 
 
 class Memory:
-    def __init__(self, monitor):
+    def __init__(self, monitor, comm):
+        self.comm = comm
         self.monitor = monitor
 
     def memory_ram(self):
@@ -317,6 +326,10 @@ class Memory:
         memoryStatus.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
         KERNEL_32.GlobalMemoryStatusEx(ctypes.byref(memoryStatus))
         return memoryStatus.ullTotalPhys, memoryStatus.ullAvailPhys
+
+    def memory_utilization(self):
+        (Total, Avail) = self.memory_ram()
+        return bytes2percent(Avail, Total)
 
     def memory_process_usage(self, hproc):
         """
@@ -368,7 +381,9 @@ class Memory:
 class Disk:
     # TODO: Get Installed applocations list names and size (the size is in bytes)
 
-    def __init__(self):
+    def __init__(self, comm):
+        self.comm = comm
+
         self.disk_dict = {}
         self.disk_get_partitions()
         self.disk_usage()
@@ -419,7 +434,7 @@ class Network:
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
-        self.conn.bind(("192.168.1.12", 0))
+        self.conn.bind(("10.92.5.59", 0))
 
         # Include IP headers
         self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
@@ -539,6 +554,7 @@ class Network:
                     "dest_port": dest_port,
                     "flag_syn": flag_syn,
                 }
+
                 if only_syn:
                     self.monitor.Add_segmnet(tcp_segment)
                     # print tcp_segment
