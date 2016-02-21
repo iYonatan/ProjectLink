@@ -5,20 +5,20 @@ from Communication import *
 
 comm = Communication()
 
-monitor = Monitor()
-s = System(comm)
-c = CPU(monitor, comm)
-m = Memory(monitor, comm)
-d = Disk(comm)
+monitor = Monitor(comm)
+s = System()
+c = CPU(monitor)
+m = Memory(monitor)
+d = Disk()
 n = Network(monitor)
 
 
 def CPU_MEMORY():
     while True:
         util = c.cpu_utilization()
-        comm.send(str(util))
+        comm.send(["System", "CPU_util", util])
         time.sleep(3)
-        comm.send(str(m.memory_ram()))
+        comm.send(["System", "Memo_Free_Ram", m.memory_ram()[1]])
         time.sleep(3)
 
 
@@ -107,7 +107,6 @@ def main():
 
 
 def FIRST_SETUP():
-    UUID = s.get_computer_UUID()
     USERNAME = "USERNAME"
     PASSWORD = "PASSWORD"
 
@@ -118,11 +117,24 @@ def FIRST_SETUP():
     if server_response != '200 OK':  # The user doesn't exist
         pass
 
-    comm.send(UUID)
+    UUID = s.get_computer_UUID()
+    comm.send(["Computer", "Computer-ID", UUID])
 
-    # -- The server is ready to get the first data from the client -- #
+    OS_version = s.get_os_version()
+    comm.send(["Computer", "OS_version", OS_version])
 
-    # -- --------------------------------------------------------- -- #
+    CPU_model = c.get_cpu_model()
+    comm.send(["System", "CPU_model", CPU_model])
+
+    CPU_num = c.get_cpu_num()
+    comm.send(["System", "CPU_num", CPU_num])
+
+    Memo_Total_Ram = m.memory_ram()[0]
+    comm.send(["System", "Memo_Total_Ram", Memo_Total_Ram])
+
+    # -- The server is ready to get the rest of the data data from the client -- #
+
+    # -- -------------------------------------------------------------------- -- #
 
 
 if __name__ == "__main__":

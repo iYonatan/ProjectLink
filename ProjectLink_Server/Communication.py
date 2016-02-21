@@ -29,10 +29,10 @@ class ClientSession(threading.Thread):
 
     def recv(self):
         # return self.sec.decrypt(self.client_sock.recv(BUFFER_SIZE))
-        return self.client_sock.recv(BUFFER_SIZE)
+        return cPickle.loads(self.client_sock.recv(BUFFER_SIZE))
 
     def run(self):
-        self.client_sock.send(self.sec.export_public_key())
+        self.send(self.sec.export_public_key())
         user_data = self.recv()
         print user_data
 
@@ -44,12 +44,26 @@ class ClientSession(threading.Thread):
 
         UUID = self.recv()
         print UUID
+
         # -- Checking if the computer's UUID exists in the database -- #
 
         # -- ------------------------------------------- -- #
+
+        os_version = self.recv()
+        print os_version
+
+        cpu_model = self.recv()
+        print cpu_model
+
+        cpu_num = self.recv()
+        print cpu_num
+
+        memo_total_ram = self.recv()
+        print memo_total_ram
+
         while True:
             print self.recv()
-            time.sleep(3)
+            time.sleep(1)
 
 
 class Communication:

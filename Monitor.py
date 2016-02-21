@@ -3,8 +3,8 @@ from functions import *
 
 
 class Monitor(object):
-    def __init__(self):
-        self.IP = '10.0.0.11'
+    def __init__(self, comm):
+        self.comm = comm
         self.segments = []  # Collects the segments
         self.segments_dict = {}
 
@@ -38,8 +38,9 @@ class Monitor(object):
 
             if (now - start) > 20:
                 self.suspicious_processes.append(name_proc)
-                print "(CPU) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc), str(pid),
-                                                                                             str(usage))
+                self.comm.send(
+                    "(CPU) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc), str(pid),
+                                                                                           str(usage)))
                 return True, usage
 
     def memory_warning(self, hmemo, proc, used):
@@ -71,9 +72,10 @@ class Monitor(object):
 
             if (now - start) > 20:
                 self.suspicious_processes.append(name_proc)
-                print "(Memory) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc),
-                                                                                                str(pid),
-                                                                                                str(proc_usage))
+                self.comm.send("(Memory) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc),
+                                                                                                         str(pid),
+                                                                                                         str(proc_usage)
+                                                                                                         ))
                 return True, proc_usage
 
     def disk_warning(self):
@@ -116,7 +118,7 @@ class Monitor(object):
                 for key, value in self.segments_dict.items():
                     if value[0] % 100 == 0:  # Number of packets in a particular port
                         if now - value[1] < 3:
-                            print "DDOS ATTACK!!"
+                            print "DDOS ATTACK!! From: {}".format(main_segment["src_ip"])
 
                         else:
                             value[1] = time.time()

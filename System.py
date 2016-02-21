@@ -7,6 +7,7 @@ import time
 import win32api
 import win32pdh
 import win32process
+import multiprocessing
 
 import socket
 import struct
@@ -20,9 +21,7 @@ from pywin32_Structs import *
 # ============================================================================ System
 
 class System:
-    def __init__(self, comm):
-        self.comm = comm
-
+    def __init__(self):
         self.processes = {}
         self.obj = 'process'
         self.item = 'ID Process'
@@ -183,8 +182,7 @@ class System:
 # ============================================================================ CPU
 
 class CPU:
-    def __init__(self, monitor, comm):
-        self.comm = comm
+    def __init__(self, monitor):
         self.sys = None
         self.monitor = monitor
 
@@ -197,6 +195,9 @@ class CPU:
             "HKEY_LOCAL_MACHINE",
             "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
             "ProcessorNameString")
+
+    def get_cpu_num(self):
+        return multiprocessing.cpu_count()
 
     def GetSystemTimes(self):
         # TODO: (?) Make a dll for the function GetSystemTimes() and cpu_process_util()
@@ -313,8 +314,7 @@ class CPU:
 
 
 class Memory:
-    def __init__(self, monitor, comm):
-        self.comm = comm
+    def __init__(self, monitor):
         self.monitor = monitor
 
     def memory_ram(self):
@@ -381,9 +381,7 @@ class Memory:
 class Disk:
     # TODO: Get Installed applocations list names and size (the size is in bytes)
 
-    def __init__(self, comm):
-        self.comm = comm
-
+    def __init__(self):
         self.disk_dict = {}
         self.disk_get_partitions()
         self.disk_usage()
@@ -434,7 +432,7 @@ class Network:
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
-        self.conn.bind(("10.92.5.59", 0))
+        self.conn.bind(("192.168.1.12", 0))
 
         # Include IP headers
         self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)

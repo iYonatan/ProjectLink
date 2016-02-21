@@ -1,3 +1,4 @@
+import cPickle
 import socket
 from Security import *
 
@@ -19,8 +20,8 @@ class Communication:
 
         try:
             # self.sock.send(cPickle.dumps(self.sec.encrypt(data)))
-            self.sock.send(data)
-            print "The data: %s - has been sent to the server" % data
+            self.sock.send(cPickle.dumps(data))
+            # print "The data: %s - has been sent to the server" % data
             return True
 
         except socket.SO_ERROR:
