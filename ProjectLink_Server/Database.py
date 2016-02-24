@@ -2,20 +2,18 @@ import mysql.connector
 
 
 class Connector:
-    def __init__(self, user_name):
+    def __init__(self):
 
-        self.user = 'project_link'
-        self.password = 'yonatan135'
-        self.hostname = 'db4free.net'
-        self.database_name = 'yonatan_eilat'
+        self.user = 'root'
+        self.password = 'yonataneilat135'
+        self.hostname = '127.0.0.1'
+        self.database_name = 'sys'
 
-        self.__connect()
-
-        self.Username = user_name
-        self.user_id = self.__find_user_id()
+        self.Username = None
+        self.user_id = None
         self.computer_id = None
 
-    def __connect(self):
+    def connect(self):
         self.cnx = mysql.connector.connect(user=self.user,
                                            password=self.password,
                                            host=self.hostname,
@@ -31,16 +29,16 @@ class Connector:
             return
         return cursor.fetchall()
 
-    def __find_user_id(self):
+    def find_user_id(self):
         query = "SELECT User_ID FROM users WHERE Username = %s"
         args = (self.Username,)
-        self.user_id = self.execute(query, args)[0][0]  # user_id
+        return self.execute(query, args)[0][0]  # user_id
 
     def user_exists(self, user_password):
         # TODO: Needs to check the password too
 
         query = "SELECT Username FROM users WHERE Username = %s AND Password = %s"
-        args = (self.Username,user_password)
+        args = (self.Username, user_password)
         if not self.execute(query, args):
             print "The username does not exist"
             return False
@@ -64,9 +62,24 @@ class Connector:
         args = (self.user_id, self.computer_id, CPU_model, CPU_num, Memo_Total_Ram)
         self.execute(query, args, True)
 
+        query = """INSERT INTO events (User_ID, Computer_ID) VALUES (%s, %s)"""
+        args = (self.user_id, self.computer_id)
+        self.execute(query, args, True)
+
         print "New Computer has been added"
         return
 
+    def update_query(self, data_list):
+        table_name = data_list[0]
+        column_name = data_list[1]
+        value = data_list[2]
+
+        query = "UPDATE {} SET {} = {} WHERE  User_ID = {} AND Computer_ID = '{}'".format(
+            table_name, column_name, value, self.user_id, self.computer_id)
+
+        self.execute(query, (), True)
+
+        # print "Some data has been added to the database"
 
 # Username = 'iYonatan'
 # c = Connector(Username)

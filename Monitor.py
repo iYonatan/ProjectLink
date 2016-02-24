@@ -30,7 +30,7 @@ class Monitor(object):
             try:
                 usage = hcpu.cpu_process_util(handle_proc)
             except:
-                break
+                return False, usage
             if usage < 20:
                 return False, usage
 
@@ -64,13 +64,13 @@ class Monitor(object):
             try:
                 proc_usage = bytes2percent(hmemo.memory_process_usage(handle_proc), used)
             except:
-                break
-            if proc_usage < 10:
+                return False, None
+            if proc_usage <= 10:
                 return False, proc_usage
 
             now = time.time()
 
-            if (now - start) > 20:
+            if (now - start) >= 20:
                 self.suspicious_processes.append(name_proc)
                 self.comm.send("(Memory) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc),
                                                                                                          str(pid),
@@ -113,12 +113,13 @@ class Monitor(object):
                 self.segments_dict[main_segment['dest_port']][0] += 1
                 # print "segment: {} || Counter is: {}".format(str(main_segment),
                 #                                              str(self.segments_dict[main_segment['dest_port']]))
+                src_ip = main_segment['src_ip']
                 main_segment = {}
                 now = time.time()
                 for key, value in self.segments_dict.items():
                     if value[0] % 100 == 0:  # Number of packets in a particular port
                         if now - value[1] < 3:
-                            print "DDOS ATTACK!! From: {}".format(main_segment["src_ip"])
+                            print "DDOS ATTACK!! From: {}".format(src_ip)
 
                         else:
                             value[1] = time.time()

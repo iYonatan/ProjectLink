@@ -1,19 +1,17 @@
-import cPickle
 import socket
 import threading
 import time
 
-from Database import Connector
 from Security import *
 
 BUFFER_SIZE = 2048
 
 
 class ClientSession(threading.Thread):
-    def __init__(self, client_conn, client_address):
+    def __init__(self, client_conn, client_address, db_conn):
         super(ClientSession, self).__init__()
 
-        self.db_conn = None
+        self.db_conn = db_conn
         self.client_sock = client_conn
         self.client_address = client_address
         self.sec = Security()
@@ -22,7 +20,7 @@ class ClientSession(threading.Thread):
         try:
             # self.sock.send(cPickle.dumps(self.sec.encrypt(data)))
             self.client_sock.send(data)
-            print "The data has been sent to the server"
+            print "{} - has been sent to the server".format(data)
             return True
 
         except socket.SO_ERROR:
@@ -41,8 +39,9 @@ class ClientSession(threading.Thread):
         # -- Checking if the user exists in the database -- #
         USERNAME = user_data.split('|')[0]
         PASSWORD = user_data.split('|')[1]
-        self.db_conn = Connector(USERNAME)
 
+        self.db_conn.Username = USERNAME
+        self.db_conn.user_id = self.db_conn.find_user_id()
         # -- ------------------------------------------- -- #
         if not self.db_conn.user_exists(PASSWORD):
             self.send('400 NOT FOUND')
@@ -50,22 +49,22 @@ class ClientSession(threading.Thread):
         self.send('200 OK')  # If the user exists
 
         UUID = self.recv()
-        self.db_conn.computer_id = UUID
+        self.db_conn.computer_id = UUID[2]
         print UUID
 
         # -- Checking if the computer's UUID exists in the database -- #
         if not self.db_conn.computer_exists():
             self.send('400 NOT FOUND')
-            os_version = self.recv()
+            os_version = self.recv()[2]
             print os_version
 
-            cpu_model = self.recv()
+            cpu_model = self.recv()[2]
             print cpu_model
 
-            cpu_num = self.recv()
+            cpu_num = self.recv()[2]
             print cpu_num
 
-            memo_total_ram = self.recv()
+            memo_total_ram = self.recv()[2]
             print memo_total_ram
 
             self.db_conn.add_computer(os_version, cpu_model, cpu_num, memo_total_ram)
@@ -75,12 +74,16 @@ class ClientSession(threading.Thread):
         # -- ------------------------------------------- -- #
 
         while True:
-            print self.recv()
+            data = self.recv()
+            if type(data) is list:
+                self.db_conn.update_query(data)
             time.sleep(1)
 
 
 class Communication:
-    def __init__(self):
+    def __init__(self, db_conn):
+        self.db_conn = db_conn
+
         self.open_clients = []
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind(('', 8030))
@@ -104,9 +107,9 @@ class Communication:
     def run(self):
         (client_conn, client_address) = self.sock.accept()
         if client_address[0] in self.open_clients:
-            client_session = ClientSession(client_conn, client_address)
+            client_session = ClientSession(client_conn, client_address, self.db_conn)
             client_session.run()
         else:
             self.open_clients.append(client_address[0])
-            client_session = ClientSession(client_conn, client_address)
+            client_session = ClientSession(client_conn, client_address, self.db_conn)
             client_session.run()

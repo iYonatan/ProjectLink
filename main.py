@@ -107,7 +107,7 @@ def main():
 
 
 def FIRST_SETUP():
-    USERNAME = "iYonatan"
+    USERNAME = "iyonatan"
     PASSWORD = "123456"
 
     comm.sec.public_key = Security.import_key(comm.recv())  # The public key from the server
@@ -118,12 +118,12 @@ def FIRST_SETUP():
         print "User does not exist"
         return
 
+    UUID = s.get_computer_UUID()
+    comm.send(["Computer", "Computer-ID", UUID])
+
     if_computer_exist = comm.recv()
     if if_computer_exist == '200 OK':
         return
-
-    UUID = s.get_computer_UUID()
-    comm.send(["Computer", "Computer-ID", UUID])
 
     OS_version = s.get_os_version()
     comm.send(["Computer", "OS_version", OS_version])
