@@ -30,7 +30,10 @@ def bytes2percent(smaller_num, bigger_num):
     :param bigger_num: Bigger number
     :return: The perecentege between the numbers
     """
-    return int(round(smaller_num / float(bigger_num), 2) * 100)
+    try:
+        return int(round(smaller_num / float(bigger_num), 2) * 100)
+    except:
+        return 0
 
 
 def get_registry_value(key, subkey, value):

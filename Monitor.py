@@ -30,7 +30,7 @@ class Monitor(object):
             try:
                 usage = hcpu.cpu_process_util(handle_proc)
             except:
-                return False, usage
+                return False, None
             if usage < 20:
                 return False, usage
 
@@ -78,8 +78,11 @@ class Monitor(object):
                                                                                                          ))
                 return True, proc_usage
 
-    def disk_warning(self):
-        pass
+    def disk_warning(self, disk_dict):
+        for key, disk_data in disk_dict.items():
+            disk_used_percent = bytes2percent(disk_data['used'], disk_data['total'])
+            if disk_used_percent >= 50:
+                print "{} is {}% full".format(key, str(disk_used_percent))
 
     def Add_segmnet(self, segment):
         """

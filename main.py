@@ -9,17 +9,20 @@ monitor = Monitor(comm)
 s = System()
 c = CPU(monitor)
 m = Memory(monitor)
-d = Disk()
+d = Disk(monitor)
 n = Network(monitor)
 
 
-def CPU_MEMORY():
+def CPU_MEMORY_DISK():
     while True:
         util = c.cpu_utilization()
-        comm.send(["System", "CPU_util", util])
+
+        comm.send(["system", "CPU_util", util])
         time.sleep(3)
-        comm.send(["System", "Memo_Free_Ram", m.memory_ram()[1]])
+        comm.send(["system", "Memo_Free_Ram", m.memory_ram()[1]])
         time.sleep(3)
+        # comm.send(["System", "Disk_list", d.disk_dict])
+        # time.sleep(3)
 
 
 def cpu_handler(hcpu, pid, name_handle_proc):
@@ -49,7 +52,8 @@ def memory_handler(hmemo, pid, name_handle_proc):
 
 
 def disk_handler():
-    pass
+    disk_thread = Thread(target=d.run)
+    disk_thread.start()
 
 
 def network_handler():
@@ -70,9 +74,10 @@ def main():
     :return:
     """
 
-    CPU_MEMORY_UTIL = Thread(target=CPU_MEMORY)
-    CPU_MEMORY_UTIL.start()
+    CPU_MEMORY_DISK_Thread = Thread(target=CPU_MEMORY_DISK)
+    CPU_MEMORY_DISK_Thread.start()
 
+    disk_handler()
     network_handler()
 
     s.processes = s.get_processes_dict()
@@ -90,8 +95,6 @@ def main():
     while True:
         opened_proc, closed_proc = s.run()
 
-        time.sleep(5)
-
         if len(opened_proc) > 0:
             for proc in opened_proc:
                 monitor_cpu_thread = Thread(target=cpu_handler, args=(c, proc, opened_proc[proc]))
@@ -105,6 +108,8 @@ def main():
         if len(closed_proc) > 0:
             continue
 
+        time.sleep(5)
+
 
 def FIRST_SETUP():
     USERNAME = "iyonatan"
@@ -114,6 +119,7 @@ def FIRST_SETUP():
     comm.send('{}|{}'.format(USERNAME, PASSWORD))
 
     if_user_exist = comm.recv()
+    print if_user_exist
     if if_user_exist != '200 OK':  # The user doesn't exist
         print "User does not exist"
         return

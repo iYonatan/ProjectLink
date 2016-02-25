@@ -1,7 +1,7 @@
 # TODO: Every error message and numbers, must be declered in the config file (config.py)
 # TODO: Declare in the config file the meaning of: callback and registry
 
-from subprocess import Popen,PIPE
+from subprocess import Popen, PIPE
 import ctypes
 import time
 import win32api
@@ -381,7 +381,9 @@ class Memory:
 class Disk:
     # TODO: Get Installed applocations list names and size (the size is in bytes)
 
-    def __init__(self):
+    def __init__(self, monitor):
+        self.monitor = monitor
+
         self.disk_dict = {}
         self.disk_get_partitions()
         self.disk_usage()
@@ -409,18 +411,17 @@ class Disk:
         free = ctypes.c_int64()
         for drive in self.disk_dict:
             GetDiskFreeSpaceExW(drive, ctypes.byref(freeuser), ctypes.byref(total), ctypes.byref(free))
-            self.disk_dict[drive] = {'total': bytes2human(total.value),
-                                     'free': bytes2human(free.value)}
+            self.disk_dict[drive] = {'total': total.value,
+                                     'used': (total.value - free.value)}
 
     def run(self):
         """
         Runs Disk class
         :return:
         """
-        proc = ctypes.windll.Kernel32.OpenProcess(ALL_PROCESS_ACCESS, False, 5480)
-        dict = win32process.GetProcessIoCounters(proc)
-        for key in dict:
-            print key, bytes2human(dict[key])
+        while True:
+            self.monitor.disk_warning(self.disk_dict)
+            time.sleep(30)  # 30 minutes
 
 
 # ============================================================================ Network
@@ -432,7 +433,7 @@ class Network:
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
-        self.conn.bind(("192.168.1.12", 0))
+        self.conn.bind(("10.92.5.59", 0))
 
         # Include IP headers
         self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)

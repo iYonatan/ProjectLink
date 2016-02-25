@@ -4,10 +4,10 @@ import mysql.connector
 class Connector:
     def __init__(self):
 
-        self.user = 'root'
-        self.password = 'yonataneilat135'
-        self.hostname = '127.0.0.1'
-        self.database_name = 'sys'
+        self.user = 'project_link'
+        self.password = 'yonatan135'
+        self.hostname = 'db4free.net'
+        self.database_name = 'yonatan_eilat'
 
         self.Username = None
         self.user_id = None
@@ -47,9 +47,11 @@ class Connector:
             return True
 
     def computer_exists(self):
-        query = "SELECT Computer_ID FROM computer WHERE User_ID = %s"
-        args = (self.user_id,)
-        return self.execute(query, args)
+        query = "SELECT Computer_ID FROM computer WHERE User_ID = %s  AND Computer_ID = %s"
+        args = (self.user_id, self.computer_id)
+        results = self.execute(query, args)
+        print results
+        return results
 
     def add_computer(self, OS_version, CPU_model, CPU_num, Memo_Total_Ram):
         query = """INSERT INTO computer (User_ID, Computer_ID, OS_version)
