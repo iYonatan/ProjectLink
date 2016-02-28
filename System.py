@@ -398,7 +398,6 @@ class Disk:
         drives = win32api.GetLogicalDriveStrings()
         drives = drives.split('\000')[:-1]
         for drive in drives:
-            drive = unicode(drive)
             self.disk_dict[drive] = {}
 
     def disk_usage(self):
@@ -419,9 +418,10 @@ class Disk:
         Runs Disk class
         :return:
         """
+        self.monitor.disk = dict.fromkeys(self.disk_dict)
         while True:
             self.monitor.disk_warning(self.disk_dict)
-            time.sleep(30)  # 30 minutes
+            time.sleep(1800)  # 30 minutes
 
 
 # ============================================================================ Network
@@ -431,9 +431,11 @@ class Network:
 
         self.monitor = monitor
 
+        self.IP_ADDR = "192.168.1.12"
+
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
-        self.conn.bind(("10.92.5.59", 0))
+        self.conn.bind((self.IP_ADDR, 0))
 
         # Include IP headers
         self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
@@ -506,8 +508,6 @@ class Network:
         """
         # TODO: Gets computer's ip through the config file
 
-        print "-- Sniffer is ready --"
-
         while True:
             raw_data, addr = self.conn.recvfrom(65535)
 
@@ -554,7 +554,7 @@ class Network:
                     "flag_syn": flag_syn,
                 }
 
-                if only_syn:
+                if only_syn and tcp_segment["src_port"] != self.IP_ADDR:
                     self.monitor.Add_segmnet(tcp_segment)
                     # print tcp_segment
                     # # region Print

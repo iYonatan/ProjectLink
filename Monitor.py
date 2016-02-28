@@ -9,6 +9,7 @@ class Monitor(object):
         self.segments_dict = {}
 
         self.suspicious_processes = []
+        self.disk = {}
 
     def cpu_warning(self, hcpu, proc):
         """
@@ -81,8 +82,12 @@ class Monitor(object):
     def disk_warning(self, disk_dict):
         for key, disk_data in disk_dict.items():
             disk_used_percent = bytes2percent(disk_data['used'], disk_data['total'])
-            if disk_used_percent >= 50:
+
+            if disk_used_percent >= 50 and disk_used_percent > self.disk[key]:
+                self.disk[key] = disk_used_percent
                 print "{} is {}% full".format(key, str(disk_used_percent))
+
+        return
 
     def Add_segmnet(self, segment):
         """

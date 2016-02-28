@@ -1,6 +1,7 @@
 import socket
 import threading
 import time
+import cPickle
 
 from Security import *
 
@@ -18,8 +19,8 @@ class ClientSession(threading.Thread):
 
     def send(self, data):
         try:
-            # self.sock.send(cPickle.dumps(self.sec.encrypt(data)))
-            self.client_sock.send(data)
+            self.client_sock.send(cPickle.dumps(self.sec.encrypt(cPickle.dumps(data))))
+            # self.client_sock.send(data)
             print "{} - has been sent to the server".format(data)
             return True
 
@@ -28,21 +29,27 @@ class ClientSession(threading.Thread):
             return False
 
     def recv(self):
-        # return self.sec.decrypt(self.client_sock.recv(BUFFER_SIZE))
-        return cPickle.loads(self.client_sock.recv(BUFFER_SIZE))
+        # return self.sec.decrypt(cPickle.load(self.client_sock.recv(BUFFER_SIZE)))
+        return cPickle.loads(self.sec.decrypt(cPickle.loads(self.client_sock.recv(BUFFER_SIZE))))
 
     def run(self):
-        self.send(self.sec.export_public_key())
+
+        self.client_sock.send(self.sec.export_public_key())
+        self.sec.client_public_key = Security.import_key(self.client_sock.recv(1024))
+        (self.sec.aes_key, self.sec.mode, self.sec.iv) = cPickle.loads(self.client_sock.recv(1024))
+        self.sec.create_cipher()
+
         user_data = self.recv()
         print user_data
 
         # -- Checking if the user exists in the database -- #
-        USERNAME = user_data.split('|')[0]
-        PASSWORD = user_data.split('|')[1]
+        USERNAME = user_data[0]
+        PASSWORD = user_data[1]
 
         self.db_conn.Username = USERNAME
         self.db_conn.user_id = self.db_conn.find_user_id()
         # -- ------------------------------------------- -- #
+
         if not self.db_conn.user_exists(PASSWORD):
             self.send('400 NOT FOUND')
             return
@@ -53,6 +60,7 @@ class ClientSession(threading.Thread):
         print UUID
 
         # -- Checking if the computer's UUID exists in the database -- #
+
         if not self.db_conn.computer_exists():
             self.send('400 NOT FOUND')
             os_version = self.recv()[2]

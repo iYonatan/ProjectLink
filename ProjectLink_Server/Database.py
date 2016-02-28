@@ -1,13 +1,14 @@
 import mysql.connector
+import json
 
 
 class Connector:
     def __init__(self):
 
-        self.user = 'project_link'
-        self.password = 'yonatan135'
-        self.hostname = 'db4free.net'
-        self.database_name = 'yonatan_eilat'
+        self.user = 'root'
+        self.password = 'yonataneilat135'
+        self.hostname = '127.0.0.1'
+        self.database_name = 'sys'
 
         self.Username = None
         self.user_id = None
@@ -76,18 +77,17 @@ class Connector:
         column_name = data_list[1]
         value = data_list[2]
 
+        if column_name == 'Disk_list':
+            value = json.dumps(value)
+
+            query = "UPDATE {} SET {} = '{}' WHERE  User_ID = {} AND Computer_ID = '{}'".format(
+                table_name, column_name, value, self.user_id, self.computer_id)
+
+            self.execute(query, (), True)
+            return
+
         query = "UPDATE {} SET {} = {} WHERE  User_ID = {} AND Computer_ID = '{}'".format(
-            table_name, column_name, value, self.user_id, self.computer_id)
+                table_name, column_name, value, self.user_id, self.computer_id)
 
         self.execute(query, (), True)
-
-        # print "Some data has been added to the database"
-
-# Username = 'iYonatan'
-# c = Connector(Username)
-#
-# query = "INSERT INTO users (Username, Password, Email, First_name, Last_name, Computer_num)\
-# VALUES (%s, %s, %s, %s, %s, %s)"
-# args = ("GG", "golden", "guy11053@gmail.com", "Guy", "Gold", 0)
-#
-# c.execute(query, args)
+        return

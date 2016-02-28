@@ -17,19 +17,19 @@ class Communication:
         self.sec = Security()
 
     def send(self, data):
-
         try:
-            # self.sock.send(cPickle.dumps(self.sec.encrypt(data)))
-            self.sock.send(cPickle.dumps(data))
-            # print "The data: %s - has been sent to the server" % data
+            self.sock.send(cPickle.dumps(self.sec.encrypt(cPickle.dumps(data))))
             return True
 
         except socket.SO_ERROR:
             print "Couldn't send data: %s to the server" % data
             return False
 
+    def create_symetric_key(self):
+        pass
+
     def recv(self):
-        return self.sock.recv(BUFFER_SIZE)
+        return cPickle.loads(self.sec.decrypt(cPickle.loads(self.sock.recv(BUFFER_SIZE))))
 
     def close(self):
         self.sock.close()

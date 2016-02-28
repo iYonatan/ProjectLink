@@ -3,14 +3,19 @@ from Monitor import *
 from System import *
 from Communication import *
 
-comm = Communication()
+# region INCTANCES
 
+comm = Communication()
 monitor = Monitor(comm)
+
 s = System()
 c = CPU(monitor)
 m = Memory(monitor)
 d = Disk(monitor)
 n = Network(monitor)
+
+
+# endregion
 
 
 def CPU_MEMORY_DISK():
@@ -21,8 +26,37 @@ def CPU_MEMORY_DISK():
         time.sleep(3)
         comm.send(["system", "Memo_Free_Ram", m.memory_ram()[1]])
         time.sleep(3)
-        # comm.send(["System", "Disk_list", d.disk_dict])
-        # time.sleep(3)
+        comm.send(["System", "Disk_list", d.disk_dict])
+        time.sleep(3)
+
+
+def system_handler():
+    s.processes = s.get_processes_dict()
+    s.create_process_handle_dict(s.processes)
+
+    for proc in s.processes:
+        monitor_cpu_thread = Thread(target=cpu_handler, args=(c, proc, s.processes[proc]))
+        monitor_cpu_thread.start()
+
+        monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
+        monitor_memory_thread.start()
+
+        time.sleep(1)
+
+    while True:
+        opened_proc, closed_proc = s.run()
+
+        if len(opened_proc) > 0:
+            for proc in opened_proc:
+                monitor_cpu_thread = Thread(target=cpu_handler, args=(c, proc, opened_proc[proc]))
+                monitor_cpu_thread.start()
+
+                monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
+                monitor_memory_thread.start()
+
+                time.sleep(1)
+
+        time.sleep(5)
 
 
 def cpu_handler(hcpu, pid, name_handle_proc):
@@ -79,52 +113,27 @@ def main():
 
     disk_handler()
     network_handler()
-
-    s.processes = s.get_processes_dict()
-    s.create_process_handle_dict(s.processes)
-
-    for proc in s.processes:
-        monitor_cpu_thread = Thread(target=cpu_handler, args=(c, proc, s.processes[proc]))
-        monitor_cpu_thread.start()
-
-        monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
-        monitor_memory_thread.start()
-
-        time.sleep(1)
-
-    while True:
-        opened_proc, closed_proc = s.run()
-
-        if len(opened_proc) > 0:
-            for proc in opened_proc:
-                monitor_cpu_thread = Thread(target=cpu_handler, args=(c, proc, opened_proc[proc]))
-                monitor_cpu_thread.start()
-
-                monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
-                monitor_memory_thread.start()
-
-                time.sleep(1)
-
-        if len(closed_proc) > 0:
-            continue
-
-        time.sleep(5)
+    system_handler()
 
 
 def FIRST_SETUP():
     USERNAME = "iyonatan"
     PASSWORD = "123456"
 
-    comm.sec.public_key = Security.import_key(comm.recv())  # The public key from the server
-    comm.send('{}|{}'.format(USERNAME, PASSWORD))
+    comm.sec.server_public_key = Security.import_key(comm.sock.recv(1024))  # The public key from the server
+    comm.sock.send(comm.sec.export_public_key())
+    comm.sock.send(cPickle.dumps((comm.sec.aes_key, comm.sec.mode, comm.sec.iv)))
+
+    comm.send([USERNAME, PASSWORD])
 
     if_user_exist = comm.recv()
-    print if_user_exist
     if if_user_exist != '200 OK':  # The user doesn't exist
         print "User does not exist"
         return
 
+    print if_user_exist
     UUID = s.get_computer_UUID()
+    print str(UUID)
     comm.send(["Computer", "Computer-ID", UUID])
 
     if_computer_exist = comm.recv()
@@ -144,10 +153,9 @@ def FIRST_SETUP():
     comm.send(["System", "Memo_Total_Ram", Memo_Total_Ram])
 
     # -- The server is ready to get the rest of the data data from the client -- #
-
-    # -- -------------------------------------------------------------------- -- #
+    return
 
 
 if __name__ == "__main__":
     FIRST_SETUP()
-    main()
+    # main()
