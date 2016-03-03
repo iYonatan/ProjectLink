@@ -12,8 +12,6 @@ unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 
 class Security:
     def __init__(self):
-        self.private_key = RSA.generate(KEY_LENGTH, Random.new().read)
-        self.public_key = self.private_key.publickey()
 
         self.server_public_key = None
 
@@ -24,20 +22,12 @@ class Security:
 
     def encrypt(self, raw):
         raw = pad(raw)
-        iv = Random.new().read(AES.block_size)
-        cipher = AES.new(self.aes_key, self.mode, iv)
-        aes_encryption = base64.b64encode(iv + cipher.encrypt(raw))
-        return self.server_public_key.encrypt(aes_encryption, 32)
+        aes_encryption = base64.b64encode(self.iv + self.cipher.encrypt(raw))
+        return aes_encryption
 
     def decrypt(self, raw):
-        raw = self.private_key.decrypt(raw)
         enc = base64.b64decode(raw)
-        iv = enc[:16]
-        cipher = AES.new(self.aes_key, self.mode, iv)
-        return unpad(cipher.decrypt(enc[16:]))
-
-    def export_public_key(self):
-        return self.public_key.exportKey()
+        return unpad(self.cipher.decrypt(enc[16:]))
 
     @staticmethod
     def import_key(keystr):

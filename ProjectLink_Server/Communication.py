@@ -19,8 +19,7 @@ class ClientSession(threading.Thread):
 
     def send(self, data):
         try:
-            self.client_sock.send(cPickle.dumps(self.sec.encrypt(cPickle.dumps(data))))
-            # self.client_sock.send(data)
+            self.client_sock.send(self.sec.encrypt(cPickle.dumps(data)))
             print "{} - has been sent to the server".format(data)
             return True
 
@@ -29,13 +28,26 @@ class ClientSession(threading.Thread):
             return False
 
     def recv(self):
-        # return self.sec.decrypt(cPickle.load(self.client_sock.recv(BUFFER_SIZE)))
-        return cPickle.loads(self.sec.decrypt(cPickle.loads(self.client_sock.recv(BUFFER_SIZE))))
+        temp_data = self.client_sock.recv(BUFFER_SIZE)
+        data = ""
+        self.client_sock.settimeout(0.5)
+
+        while len(temp_data) > 0:
+
+            data += temp_data
+            try:
+                temp_data = self.client_sock.recv(BUFFER_SIZE)
+            except:
+                break
+
+        self.client_sock.settimeout(5)
+
+        d = cPickle.loads(self.sec.decrypt(data))
+        return d
 
     def run(self):
 
         self.client_sock.send(self.sec.export_public_key())
-        self.sec.client_public_key = Security.import_key(self.client_sock.recv(1024))
         (self.sec.aes_key, self.sec.mode, self.sec.iv) = cPickle.loads(self.client_sock.recv(1024))
         self.sec.create_cipher()
 
@@ -56,8 +68,8 @@ class ClientSession(threading.Thread):
         self.send('200 OK')  # If the user exists
 
         UUID = self.recv()
-        self.db_conn.computer_id = UUID[2]
         print UUID
+        self.db_conn.computer_id = UUID[2]
 
         # -- Checking if the computer's UUID exists in the database -- #
 
@@ -101,7 +113,7 @@ class Communication:
     def send(self, data):
         try:
             self.sock.send(data)
-            print "The data has been sent to the server"
+            print "The data has been sent to the client"
 
         except socket.SO_ERROR:
             print "Couldn't send data to the server"

@@ -121,8 +121,7 @@ def FIRST_SETUP():
     PASSWORD = "123456"
 
     comm.sec.server_public_key = Security.import_key(comm.sock.recv(1024))  # The public key from the server
-    comm.sock.send(comm.sec.export_public_key())
-    comm.sock.send(cPickle.dumps((comm.sec.aes_key, comm.sec.mode, comm.sec.iv)))
+    comm.sock.send(cPickle.dumps([comm.sec.aes_key, comm.sec.mode, comm.sec.iv])+"\r\n")
 
     comm.send([USERNAME, PASSWORD])
 
@@ -132,8 +131,8 @@ def FIRST_SETUP():
         return
 
     print if_user_exist
+
     UUID = s.get_computer_UUID()
-    print str(UUID)
     comm.send(["Computer", "Computer-ID", UUID])
 
     if_computer_exist = comm.recv()
@@ -158,4 +157,4 @@ def FIRST_SETUP():
 
 if __name__ == "__main__":
     FIRST_SETUP()
-    # main()
+    main()

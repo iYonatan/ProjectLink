@@ -18,7 +18,7 @@ class Communication:
 
     def send(self, data):
         try:
-            self.sock.send(cPickle.dumps(self.sec.encrypt(cPickle.dumps(data))))
+            self.sock.send(self.sec.encrypt(cPickle.dumps(data)))
             return True
 
         except socket.SO_ERROR:
@@ -29,7 +29,20 @@ class Communication:
         pass
 
     def recv(self):
-        return cPickle.loads(self.sec.decrypt(cPickle.loads(self.sock.recv(BUFFER_SIZE))))
+        temp_data = self.sock.recv(BUFFER_SIZE)
+        data = ""
+        self.sock.settimeout(0.5)
+
+        while len(temp_data) > 0:
+
+            data += temp_data
+            try:
+                temp_data = self.sock.recv(BUFFER_SIZE)
+            except:
+                break
+        self.sock.settimeout(5)
+
+        return cPickle.loads(self.sec.decrypt(data))
 
     def close(self):
         self.sock.close()

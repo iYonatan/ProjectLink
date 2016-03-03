@@ -16,7 +16,6 @@ class Security:
         self.public_key = self.private_key.publickey()
 
         self.client_public_key = None
-
         self.aes_key = None
         self.iv = None
         self.mode = None
@@ -24,18 +23,12 @@ class Security:
 
     def encrypt(self, raw):
         raw = pad(raw)
-        iv = Random.new().read(AES.block_size)
-        cipher = AES.new(self.aes_key, self.mode, iv)
-        aes_encryption = base64.b64encode(iv + cipher.encrypt(raw))
-        return self.client_public_key.encrypt(aes_encryption, 32)
+        aes_encryption = base64.b64encode(self.iv + self.cipher.encrypt(raw))
+        return aes_encryption
 
     def decrypt(self, raw):
-        raw = self.private_key.decrypt(raw)
         enc = base64.b64decode(raw)
-        print enc
-        iv = enc[:16]
-        cipher = AES.new(self.aes_key, self.mode, iv)
-        return unpad(cipher.decrypt(enc[16:]))
+        return unpad(self.cipher.decrypt(enc[16:]))
 
     def create_cipher(self):
         self.cipher = AES.new(self.aes_key, self.mode, self.iv)
@@ -43,6 +36,3 @@ class Security:
     def export_public_key(self):
         return self.public_key.exportKey()
 
-    @staticmethod
-    def import_key(keystr):
-        return RSA.importKey(keystr)
