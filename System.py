@@ -308,6 +308,7 @@ class CPU:
                     suspicious = self.monitor.cpu_warning(self, proc)
                     if not suspicious[0]:
                         continue
+            time.sleep(10)
 
 
 # ============================================================================ Memory
@@ -359,7 +360,6 @@ class Memory:
         handle_proc = proc[pid][1]
 
         while True:
-            time.sleep(1)
             if handle_proc == 0:
                 return
             avail = self.memory_ram()[1]
@@ -374,6 +374,7 @@ class Memory:
                     suspicious = self.monitor.memory_warning(self, proc, used)
                     if not suspicious[0]:
                         continue
+            time.sleep(10)
 
 
 # ============================================================================ Disk
@@ -409,7 +410,7 @@ class Disk:
         total = ctypes.c_int64()
         free = ctypes.c_int64()
         for drive in self.disk_dict:
-            GetDiskFreeSpaceExW(drive, ctypes.byref(freeuser), ctypes.byref(total), ctypes.byref(free))
+            GetDiskFreeSpaceExW(unicode(drive), ctypes.byref(freeuser), ctypes.byref(total), ctypes.byref(free))
             self.disk_dict[drive] = {'total': total.value,
                                      'used': (total.value - free.value)}
 
@@ -554,7 +555,7 @@ class Network:
                     "flag_syn": flag_syn,
                 }
 
-                if only_syn and tcp_segment["src_port"] != self.IP_ADDR:
+                if only_syn and tcp_segment["src_ip"] != self.IP_ADDR:
                     self.monitor.Add_segmnet(tcp_segment)
                     # print tcp_segment
                     # # region Print

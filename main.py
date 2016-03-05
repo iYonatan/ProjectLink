@@ -14,14 +14,12 @@ m = Memory(monitor)
 d = Disk(monitor)
 n = Network(monitor)
 
-
 # endregion
 
 
 def CPU_MEMORY_DISK():
     while True:
         util = c.cpu_utilization()
-
         comm.send(["system", "CPU_util", util])
         time.sleep(3)
         comm.send(["system", "Memo_Free_Ram", m.memory_ram()[1]])
@@ -108,10 +106,11 @@ def main():
     :return:
     """
 
+    disk_handler()
+
     CPU_MEMORY_DISK_Thread = Thread(target=CPU_MEMORY_DISK)
     CPU_MEMORY_DISK_Thread.start()
 
-    disk_handler()
     network_handler()
     system_handler()
 
@@ -121,8 +120,7 @@ def FIRST_SETUP():
     PASSWORD = "123456"
 
     comm.sec.server_public_key = Security.import_key(comm.sock.recv(1024))  # The public key from the server
-    comm.sock.send(comm.sec.export_public_key())
-    comm.sock.send(cPickle.dumps((comm.sec.aes_key, comm.sec.mode, comm.sec.iv)))
+    comm.sock.send(cPickle.dumps([comm.sec.aes_key, comm.sec.mode, comm.sec.iv]))
 
     comm.send([USERNAME, PASSWORD])
 
@@ -133,10 +131,10 @@ def FIRST_SETUP():
 
     print if_user_exist
     UUID = s.get_computer_UUID()
-    print str(UUID)
     comm.send(["Computer", "Computer-ID", UUID])
 
     if_computer_exist = comm.recv()
+    print if_computer_exist
     if if_computer_exist == '200 OK':
         return
 
@@ -158,4 +156,4 @@ def FIRST_SETUP():
 
 if __name__ == "__main__":
     FIRST_SETUP()
-    # main()
+    main()

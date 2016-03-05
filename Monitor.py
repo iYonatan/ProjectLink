@@ -126,7 +126,7 @@ class Monitor(object):
                 now = time.time()
                 for key, value in self.segments_dict.items():
                     if value[0] % 100 == 0:  # Number of packets in a particular port
-                        if now - value[1] < 3:
+                        if now - value[1] < 1:
                             print "DDOS ATTACK!! From: {}".format(src_ip)
 
                         else:
