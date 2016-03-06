@@ -119,7 +119,7 @@ def FIRST_SETUP():
     USERNAME = "iyonatan"
     PASSWORD = "123456"
 
-    comm.sec.server_public_key = Security.import_key(comm.sock.recv(1024))  # The public key from the server
+    comm.sec.server_public_key = Security.import_key(comm.sock.recv(1024))
     comm.sock.send(cPickle.dumps([comm.sec.aes_key, comm.sec.mode, comm.sec.iv]))
 
     comm.send([USERNAME, PASSWORD])
