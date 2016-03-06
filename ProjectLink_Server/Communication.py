@@ -2,6 +2,7 @@ import socket
 import threading
 import time
 import cPickle
+import json
 
 from Security import *
 
@@ -29,24 +30,16 @@ class ClientSession(threading.Thread):
 
     def recv(self):
         temp_data = self.client_sock.recv(BUFFER_SIZE)
-        data = ""
-        self.client_sock.settimeout(0.5)
-
-        while len(temp_data) > 0:
-
-            data += temp_data
-            try:
-                temp_data = self.client_sock.recv(BUFFER_SIZE)
-            except:
-                break
-
         self.client_sock.settimeout(5)
+        decrypted_data = self.sec.decrypt(temp_data)
+        try:
+            return json.loads(decrypted_data)
 
-        d = cPickle.loads(self.sec.decrypt(data))
-        return d
+        except Exception as e:
+            print e
+            return
 
     def run(self):
-
         self.client_sock.send(self.sec.export_public_key())
         (self.sec.aes_key, self.sec.mode, self.sec.iv) = cPickle.loads(self.client_sock.recv(1024))
         self.sec.create_cipher()
@@ -67,9 +60,8 @@ class ClientSession(threading.Thread):
             return
         self.send('200 OK')  # If the user exists
 
-        UUID = self.recv()
-        print UUID
-        self.db_conn.computer_id = UUID[2]
+        UUID = self.recv()[2]
+        self.db_conn.computer_id = UUID
 
         # -- Checking if the computer's UUID exists in the database -- #
 
