@@ -51,6 +51,7 @@ class Connector:
         query = "SELECT Computer_ID FROM computer WHERE User_ID = %s  AND Computer_ID = %s"
         args = (self.user_id, self.computer_id)
         results = self.execute(query, args)
+        print results
         return results
 
     def add_computer(self, OS_version, CPU_model, CPU_num, Memo_Total_Ram):

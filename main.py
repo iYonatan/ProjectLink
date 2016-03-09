@@ -24,7 +24,7 @@ def CPU_MEMORY_DISK():
         time.sleep(3)
         comm.send(["system", "Memo_Free_Ram", m.memory_ram()[1]])
         time.sleep(3)
-        comm.send(["System", "Disk_list", d.disk_dict])
+        comm.send(["system", "Disk_list", d.disk_dict])
         time.sleep(3)
 
 

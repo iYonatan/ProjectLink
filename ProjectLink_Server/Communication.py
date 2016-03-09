@@ -98,7 +98,7 @@ class Communication:
 
         self.open_clients = []
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind(('', 8030))
+        self.sock.bind(('0.0.0.0', 8030))
         self.sock.listen(5)
         print "Waiting for connections...\n\n"
 
@@ -118,6 +118,7 @@ class Communication:
 
     def run(self):
         (client_conn, client_address) = self.sock.accept()
+        print client_address
         if client_address[0] in self.open_clients:
             client_session = ClientSession(client_conn, client_address, self.db_conn)
             client_session.run()
