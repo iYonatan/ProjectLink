@@ -12,6 +12,7 @@ import multiprocessing
 import socket
 import struct
 
+from config import *
 from functions import *
 from pywin32_Structs import *
 
@@ -39,7 +40,7 @@ class System:
 
     def get_computer_UUID(self):
         uuid = Popen(['wmic', 'csproduct', 'get', 'UUID'], stdout=PIPE, stdin=PIPE)
-        return uuid.communicate()[0].split()[1]
+        return uuid.communicate()[default.ZERO].split()[default.ONE]
 
     def get_processes_dict(self):
         """
@@ -55,14 +56,14 @@ class System:
 
             for instance in proc_name:
                 if instance in instances:
-                    instances[instance] += 1
+                    instances[instance] += default.ONE
                 else:
-                    instances[instance] = 0
+                    instances[instance] = default.ZERO
 
             proc_pid_name = {}
 
             for instance, max_instances in instances.items():
-                for inum in xrange(max_instances + 1):
+                for inum in xrange(max_instances + default.ONE):
                     try:
                         hq = win32pdh.OpenQuery()  # initializes the query handle
                         path = win32pdh.MakeCounterPath((None, self.obj, instance, None, inum, self.item))
@@ -92,10 +93,10 @@ class System:
 
                 proc_pid_name = {}
 
-                proc_id_counter = 0
+                proc_id_counter = default.ZERO
                 for instance in range(len(proc_name)):
                     proc_pid_name[proc_id[instance]] = [(proc_name[instance])]
-                    proc_id_counter += 1
+                    proc_id_counter += default.ONE
 
                 return proc_pid_name
 
@@ -120,12 +121,12 @@ class System:
         def foreach_window(hwnd, lParam):
             if IsWindowVisible(hwnd):
                 length = GetWindowTextLength(hwnd)
-                buff = ctypes.create_unicode_buffer(length + 1)
-                GetWindowText(hwnd, buff, length + 1)
+                buff = ctypes.create_unicode_buffer(length + default.ONE)
+                GetWindowText(hwnd, buff, length + default.ONE)
                 titles.append(buff.value)
             return True
 
-        EnumWindows(EnumWindowsProc(foreach_window), 0)  # Callback
+        EnumWindows(EnumWindowsProc(foreach_window), default.ZERO)  # Callback
         return titles
 
     def create_process_handle_dict(self, procsses):
@@ -163,13 +164,13 @@ class System:
         new_processes_dict = {}
         closed_processes_dict = {}
 
-        if len(new_processes) > 0:
+        if len(new_processes) > default.ZERO:
             self.create_process_handle_dict(new_pid_dict)
             for pid in new_processes:
                 self.processes.update({pid: new_pid_dict[pid]})
                 new_processes_dict.update({pid: new_pid_dict[pid]})
 
-        if len(closed_processes) > 0:
+        if len(closed_processes) > default.ZERO:
             for pid in closed_processes:
                 closed_processes_dict.update({pid: self.processes[pid]})
                 self.close_process_handle(self.processes[pid][1])
@@ -245,7 +246,7 @@ class CPU:
         ker = SecSystemTimes['kernelTime'] - FirstSystemTimes['kernelTime']
         idl = SecSystemTimes['idleTime'] - FirstSystemTimes['idleTime']
         self.sys = usr + ker
-        return int((self.sys - idl) * 100 / self.sys)
+        return int((self.sys - idl) * default.PERCENT_LIMIT / self.sys)
 
     def cpu_process_util(self, hproc):
         """
@@ -280,7 +281,7 @@ class CPU:
 
         proc_total_time = proc_usr + proc_ker
 
-        proc_utilization = (100 * proc_total_time) / self.sys
+        proc_utilization = (default.PERCENT_LIMIT * proc_total_time) / self.sys
         return proc_utilization
 
     def run(self, proc):
@@ -290,23 +291,23 @@ class CPU:
         :return:
         """
 
-        pid = proc.keys()[0]
-        handle_proc = proc[pid][1]
+        pid = proc.keys()[default.ZERO]
+        handle_proc = proc[pid][system.PROCESS_HANDLE]
         while True:
-            time.sleep(1)
+            time.sleep(default.ONE)
 
-            if handle_proc == 0:
+            if handle_proc == default.ZERO:
                 return
 
             cpu_usage = self.cpu_utilization()
-            if cpu_usage > 30:
+            if cpu_usage > system.NORMAL_CPU_USAGE:
                 try:
                     process_usage = self.cpu_process_util(handle_proc)
                 except:
                     break
-                if process_usage > 20:
+                if process_usage > system.NORAML_PROCESS_USAGE:
                     suspicious = self.monitor.cpu_warning(self, proc)
-                    if not suspicious[0]:
+                    if not suspicious[default.ZERO]:
                         continue
             time.sleep(10)
 
@@ -354,15 +355,15 @@ class Memory:
         :param proc: process dictinary (dict)
         :return: None
         """
-        total = self.memory_ram()[0]
+        total = self.memory_ram()[default.ZERO]
 
-        pid = proc.keys()[0]
-        handle_proc = proc[pid][1]
+        pid = proc.keys()[default.ZERO]
+        handle_proc = proc[pid][system.PROCESS_HANDLE]
 
-        while True:
-            if handle_proc == 0:
+        while default.UNLIMITED_LOOP:
+            if handle_proc == default.ZERO:
                 return
-            avail = self.memory_ram()[1]
+            avail = self.memory_ram()[default.ONE]
             used = total - avail
             used_usage = bytes2percent(used, total)
             if used_usage > 40:
@@ -372,7 +373,7 @@ class Memory:
                     break
                 if proc_usage >= 10:
                     suspicious = self.monitor.memory_warning(self, proc, used)
-                    if not suspicious[0]:
+                    if not suspicious[default.ZERO]:
                         continue
             time.sleep(10)
 
@@ -439,7 +440,7 @@ class Network:
         self.conn.bind((self.IP_ADDR, 0))
 
         # Include IP headers
-        self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+        self.conn.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, default.ONE)
 
         # receive all packages
         self.conn.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
@@ -509,8 +510,8 @@ class Network:
         """
         # TODO: Gets computer's ip through the config file
 
-        while True:
-            raw_data, addr = self.conn.recvfrom(65535)
+        while default.UNLIMITED_LOOP:
+            raw_data, addr = self.conn.recvfrom(network.MAX_PACKET_RECIVER)
 
             version, ttl, proto, src, dest, data = self.IPv4_packet(raw_data)
             # # region Print
@@ -519,7 +520,7 @@ class Network:
             # # endregion
 
             # ICMP pakcet
-            if proto == 1:
+            if proto == network.ICMP:
                 (icmp_type, code, checksum, data) = self.ICMP_packet(data)
                 # # region Print
                 # print TAB_1 + "ICMP Packet:"
@@ -527,7 +528,7 @@ class Network:
                 # # endregion
 
             # TCP segment
-            elif proto == 6:
+            elif proto == network.TCP:
 
                 (src_port, dest_port, sequence, ack,
                  flag_urg,
@@ -573,7 +574,7 @@ class Network:
                     # # endregion
 
             # UDP segment
-            elif proto == 17:
+            elif proto == network.UDP:
                 (src_port, dest_port, length, data) = self.UDP_segment(data)
                 # # region Print
                 # print TAB_1 + "UDP segment:"

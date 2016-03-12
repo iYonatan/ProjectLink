@@ -21,16 +21,19 @@ class ClientSession(threading.Thread):
     def send(self, data):
         try:
             self.client_sock.send(self.sec.encrypt(cPickle.dumps(data)))
-            print "{} - has been sent to the server".format(data)
+            print "{} - has been sent to the client".format(data)
             return True
 
         except socket.SO_ERROR:
             print "Couldn't send data to the server"
             return False
 
-    def recv(self):
+    def recv(self, timeout=True):
         temp_data = self.client_sock.recv(BUFFER_SIZE)
-        self.client_sock.settimeout(5)
+
+        if timeout:
+            self.client_sock.settimeout(5)
+
         decrypted_data = self.sec.decrypt(temp_data)
         try:
             return json.loads(decrypted_data)
@@ -39,25 +42,31 @@ class ClientSession(threading.Thread):
             print e
             return
 
-    def run(self):
-        self.client_sock.send(self.sec.export_public_key())
-        (self.sec.aes_key, self.sec.mode, self.sec.iv) = cPickle.loads(self.client_sock.recv(1024))
-        self.sec.create_cipher()
-
-        user_data = self.recv()
+    def user_handle(self):
+        user_data = self.recv(False)
         print user_data
 
         # -- Checking if the user exists in the database -- #
         USERNAME = user_data[0]
         PASSWORD = user_data[1]
 
-        self.db_conn.Username = USERNAME
-        self.db_conn.user_id = self.db_conn.find_user_id()
+        if not self.db_conn.user_exists(USERNAME, PASSWORD):
+            self.send('400 NOT FOUND')
+            return self.user_handle()
+
+        return USERNAME, PASSWORD
+
+    def run(self):
+        self.client_sock.send(self.sec.export_public_key())
+        (self.sec.aes_key, self.sec.mode, self.sec.iv) = cPickle.loads(self.client_sock.recv(1024))
+        self.sec.create_cipher()
+
+        (USERNAME, PASSWORD) = self.user_handle()
         # -- ------------------------------------------- -- #
 
-        if not self.db_conn.user_exists(PASSWORD):
-            self.send('400 NOT FOUND')
-            return
+        self.db_conn.Username = USERNAME
+        print self.db_conn.Username
+        self.db_conn.user_id = self.db_conn.find_user_id()
         self.send('200 OK')  # If the user exists
 
         UUID = self.recv()[2]

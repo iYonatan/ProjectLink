@@ -18,7 +18,7 @@ class Communication:
         self.sec = Security()
 
     def send(self, data):
-        self.sock.settimeout(1)
+        self.sock.settimeout(0.5)
         try:
             self.sock.send(self.sec.encrypt(json.dumps(data)))
             return True
@@ -45,3 +45,4 @@ class Communication:
 
     def close(self):
         self.sock.close()
+
