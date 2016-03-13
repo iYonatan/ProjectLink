@@ -35,16 +35,16 @@ class Connector:
         args = (self.Username,)
         return self.execute(query, args)[0][0]  # user_id
 
-    def user_exists(self, user_password):
+    def user_exists(self, Username, user_password):
         # TODO: Needs to check the password too
 
         query = "SELECT Username FROM users WHERE Username = %s AND Password = %s"
-        args = (self.Username, user_password)
+        args = (Username, user_password)
         if not self.execute(query, args):
             print "The username does not exist"
             return False
         else:
-            print "{} exists".format(self.Username)
+            print "{} exists".format(Username)
             return True
 
     def computer_exists(self):

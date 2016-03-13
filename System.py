@@ -560,7 +560,7 @@ class Network:
                     self.monitor.Add_segmnet(tcp_segment)
                     # print tcp_segment
                     # # region Print
-                    # print TAB_1 + "TCP segment:"
+                    # "TCP segment:"
 
                     # print ('src_port: {}, dest_port: {}'.format(src_port, dest_port, ))
                     # print (

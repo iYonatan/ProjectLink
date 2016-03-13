@@ -42,13 +42,6 @@ class GUI(gtk.Window):
         # Link button
         label = gtk.Label()
         label.set_markup("<a href=\"http://projectlink.net23.net\" title=\"Go to Project Link website\">Register</a>")
-        vbox.pack_start(label, True, True, 0)
-
-    def Login(self, widgt=None):
-        return self.username_input.get_text(), self.pwd_input.get_text()
-
-    def user_does_not_exist(self):
-        pass
 
     def loading(self, wait=False):
         if wait:
