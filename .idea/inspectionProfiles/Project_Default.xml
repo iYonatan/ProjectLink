@@ -10,6 +10,7 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="object.*" />
+          <option value="gi.repository.*" />
         </list>
       </option>
     </inspection_tool>

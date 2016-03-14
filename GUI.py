@@ -1,9 +1,12 @@
-import gtk
+import gi
+
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 
-class GUI(gtk.Window):
+class GUI(Gtk.Window):
     def __init__(self, method):
-        gtk.Window.__init__(self)
+        Gtk.Window.__init__(self)
 
         self.method = method
         # Initinal window data
@@ -16,31 +19,31 @@ class GUI(gtk.Window):
         self.set_icon_from_file(r'Documents\Other\projectlink_sm_icon.png')
 
         # Box
-        vbox = gtk.VBox()
+        vbox = Gtk.VBox()
         self.add(vbox)
 
         # Label
-        username_label = gtk.Label("Welcome to Project Link!")
+        username_label = Gtk.Label("Welcome to Project Link!")
         vbox.pack_start(username_label, True, True, 0)
 
         # Username input
-        self.username_input = gtk.Entry()
+        self.username_input = Gtk.Entry()
         self.username_input.set_text("iyonatan")
         vbox.pack_start(self.username_input, True, True, 0)
 
         # Password input
-        self.pwd_input = gtk.Entry()
+        self.pwd_input = Gtk.Entry()
         self.pwd_input.set_text("123456")
         self.pwd_input.set_visibility(False)
         vbox.pack_start(self.pwd_input, True, True, 0)
 
         # Login button
-        self.button = gtk.Button(label="Login")
+        self.button = Gtk.Button(label="Login")
         self.button.connect("clicked", self.method)
         vbox.pack_start(self.button, True, True, 0)
 
         # Link button
-        label = gtk.Label()
+        label = Gtk.Label()
         label.set_markup("<a href=\"http://projectlink.net23.net\" title=\"Go to Project Link website\">Register</a>")
 
     def loading(self, wait=False):
@@ -50,3 +53,5 @@ class GUI(gtk.Window):
         else:
             self.button.set_sensitive(True)
             self.button.set_label("Login")
+
+

@@ -1,4 +1,5 @@
 from threading import Thread
+from gi.overrides.Gtk import Gtk
 from Monitor import *
 from System import *
 from Communication import *
@@ -49,8 +50,9 @@ def user_handle(widgt=None):
     # If the user exists, the GUI will kill itself in order to continue the rest of the code, otherwise the GUI will
     # keep running until the user inputed currect username and password
     if if_user_exist == response.OK_200:
-        gtk.main_quit()
+        Gtk.main_quit()
         gui.destroy()
+        return
 
     print "User does not exist"
 
@@ -62,8 +64,8 @@ def CPU_MEMORY_DISK():
         time.sleep(default.WAIT_3_SEC)
         comm.send(["system", "Memo_Free_Ram", m.memory_ram()[1]])
         time.sleep(default.WAIT_3_SEC)
-        comm.send(["system", "Disk_list", d.disk_dict])
-        time.sleep(default.WAIT_3_SEC)
+        # comm.send(["system", "Disk_list", d.disk_dict])
+        # time.sleep(default.WAIT_3_SEC)
 
 
 def system_handler():
@@ -171,9 +173,9 @@ def FIRST_SETUP():
     # Initilize the GUI. The target function is user_handle() which means that this function will get the user inputs
     # After the user entered correct username and password the code will continue
     gui = GUI(user_handle)
-    gui.connect("delete-event", gtk.main_quit)
+    gui.connect("delete-event", Gtk.main_quit)
     gui.show_all()
-    gtk.main()
+    Gtk.main()
 
     # Gets computer UUID
     UUID = s.get_computer_UUID()

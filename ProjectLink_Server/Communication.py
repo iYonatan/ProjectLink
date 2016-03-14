@@ -20,7 +20,7 @@ class ClientSession(threading.Thread):
 
     def send(self, data):
         try:
-            self.client_sock.send(self.sec.encrypt(cPickle.dumps(data)))
+            self.client_sock.send(self.sec.encrypt(json.dumps(data)))
             print "{} - has been sent to the client".format(data)
             return True
 
@@ -96,9 +96,9 @@ class ClientSession(threading.Thread):
 
         while True:
             data = self.recv()
+            print data
             if type(data) is list:
                 self.db_conn.update_query(data)
-            time.sleep(1)
 
 
 class Communication:

@@ -433,7 +433,7 @@ class Network:
 
         self.monitor = monitor
 
-        self.IP_ADDR = "192.168.1.12"
+        self.IP_ADDR = "10.92.5.59"
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
