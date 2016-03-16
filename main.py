@@ -1,10 +1,9 @@
 from threading import Thread
-from gi.overrides.Gtk import Gtk
 from Monitor import *
 from System import *
 from Communication import *
 from config import *
-from GUI import *
+from GUI import GUI
 
 # region INCTANCES
 
@@ -20,27 +19,27 @@ d = Disk(monitor)  # Instance of Disk class
 n = Network(monitor)  # Instance of Network class
 
 # First decleration of the GUI class
-gui = None
+gui = GUI()
 
 
 # endregion
 
-def user_handle(widgt=None):
+def user_handle(gui):
     """
     Callback function. The function is invoked when a user clicked on the submit button ("Login") afrer entring two
     inputs: Username and Password. The fucntion takes these inputs and send them to the server. The server returns if
     the username and the password exist in the database. If the do, the GUI will close itself and the code will continue
     otherwise, the GUI will keep asking for username and password until the server accepts them.
 
-    :param widgt: a button object (from GUI.py)
+    :param gui:
     :return: None
     """
-    global gui
 
     # Get the inputs from the GUI: Username and password input
-    USERNAME = gui.username_input.get_text()
-    PASSWORD = gui.pwd_input.get_text()
+    USERNAME = gui.username_input.get()
+    PASSWORD = gui.pwd_input.get()
 
+    print USERNAME, PASSWORD
     # Sends Username and password that the user inputed
     comm.send([USERNAME, PASSWORD])
 
@@ -50,11 +49,11 @@ def user_handle(widgt=None):
     # If the user exists, the GUI will kill itself in order to continue the rest of the code, otherwise the GUI will
     # keep running until the user inputed currect username and password
     if if_user_exist == response.OK_200:
-        Gtk.main_quit()
+        gui.success_login()
         gui.destroy()
         return
 
-    print "User does not exist"
+    gui.failed_login()
 
 
 def CPU_MEMORY_DISK():
@@ -64,8 +63,6 @@ def CPU_MEMORY_DISK():
         time.sleep(default.WAIT_3_SEC)
         comm.send(["system", "Memo_Free_Ram", m.memory_ram()[1]])
         time.sleep(default.WAIT_3_SEC)
-        # comm.send(["system", "Disk_list", d.disk_dict])
-        # time.sleep(default.WAIT_3_SEC)
 
 
 def system_handler():
@@ -124,8 +121,12 @@ def memory_handler(hmemo, pid, name_handle_proc):
 
 
 def disk_handler():
-    disk_thread = Thread(target=d.run)
-    disk_thread.start()
+    disk_monitor_thread = Thread(target=d.run)
+    disk_monitor_thread.start()
+
+    while default.UNLIMITED_LOOP:
+        comm.send(["system", "Disk_list", d.disk_dict])
+        time.sleep(1800)
 
 
 def network_handler():
@@ -146,7 +147,8 @@ def main():
     :return:
     """
 
-    disk_handler()
+    disk_thread = Thread(target=disk_handler)
+    disk_thread.start()
 
     CPU_MEMORY_DISK_Thread = Thread(target=CPU_MEMORY_DISK)
     CPU_MEMORY_DISK_Thread.start()
@@ -170,12 +172,9 @@ def FIRST_SETUP():
     # Sends AES key, mode and iv to the server
     comm.sock.send(cPickle.dumps([comm.sec.aes_key, comm.sec.mode, comm.sec.iv]))
 
-    # Initilize the GUI. The target function is user_handle() which means that this function will get the user inputs
+    # Initilizes the GUI. The target function is user_handle() which means that this function will get the user inputs
     # After the user entered correct username and password the code will continue
-    gui = GUI(user_handle)
-    gui.connect("delete-event", Gtk.main_quit)
-    gui.show_all()
-    Gtk.main()
+    gui.run(user_handle)
 
     # Gets computer UUID
     UUID = s.get_computer_UUID()

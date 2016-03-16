@@ -1,57 +1,75 @@
-import gi
-
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from tkinter import *
+import tkinter.messagebox as tm
 
 
-class GUI(Gtk.Window):
-    def __init__(self, method):
-        Gtk.Window.__init__(self)
+class LoginFrame(Frame):
+    def __init__(self, method_name, master, **kw):
+        Frame.__init__(self, master, **kw)
 
-        self.method = method
-        # Initinal window data
-        self.set_title("Project Link")
-        self.set_border_width(10)
-        self.set_size_request(350, 200)
-        self.set_resizable(False)
+        self.master.title("Project Link")
+        self.master.minsize(350, 150)
+        self.master.resizable(0, 0)
+        self.master.iconbitmap(
+            default='C:\Users\Yonatan\PycharmProjects\ProjectLink\Documents\Other\projectlink_sm_icon.ico')
 
-        # Navbar icon
-        self.set_icon_from_file(r'Documents\Other\projectlink_sm_icon.png')
+        self.method_name = method_name
 
-        # Box
-        vbox = Gtk.VBox()
-        self.add(vbox)
+        self.username_input = Entry(self)
+        self.pwd_input = Entry(self, show="*")
 
-        # Label
-        username_label = Gtk.Label("Welcome to Project Link!")
-        vbox.pack_start(username_label, True, True, 0)
+        self.label_1 = Label(self, text="Username: ")
+        self.label_2 = Label(self, text="Password: ")
 
-        # Username input
-        self.username_input = Gtk.Entry()
-        self.username_input.set_text("iyonatan")
-        vbox.pack_start(self.username_input, True, True, 0)
+        self.label_1.grid(row=50)
+        self.label_2.grid(row=51)
 
-        # Password input
-        self.pwd_input = Gtk.Entry()
-        self.pwd_input.set_text("123456")
-        self.pwd_input.set_visibility(False)
-        vbox.pack_start(self.pwd_input, True, True, 0)
+        self.username_input.grid(row=50, column=1)
+        self.pwd_input.grid(row=51, column=1)
 
-        # Login button
-        self.button = Gtk.Button(label="Login")
-        self.button.connect("clicked", self.method)
-        vbox.pack_start(self.button, True, True, 0)
+        self.logbtn = Button(self, text="Login", command=lambda: self.method_name(self))
+        self.logbtn.grid(columnspan=2)
 
-        # Link button
-        label = Gtk.Label()
-        label.set_markup("<a href=\"http://projectlink.net23.net\" title=\"Go to Project Link website\">Register</a>")
+        self.pack()
 
-    def loading(self, wait=False):
-        if wait:
-            self.button.set_sensitive(False)
-            self.button.set_label("Wait")
+    def failed_login(self):
+        tm.showerror("Login error", "Incorrect username or password")
+
+    def success_login(self):
+        tm.showinfo("Login info", "Welcome to Project Link!")
+
+    def _login_btn_clickked(self):
+        # print("Clicked")
+        username = self.username_input.get()
+        password = self.pwd_input.get()
+
+        # print(username, password)
+
+        if username == "john" and password == "password":
+            tm.showinfo("Login info", "Welcome John")
         else:
-            self.button.set_sensitive(True)
-            self.button.set_label("Login")
+            tm.showerror("Login error", "Incorrect username")
 
 
+class GUI:
+    def __init__(self, ):
+        self.method_name = None
+        self.lf = None
+
+    def run(self, method_name):
+        self.method_name = method_name
+        root = Tk()
+        self.lf = LoginFrame(self.method_name, root)
+        root.mainloop()
+
+# def test(gui):
+#     print gui.username_input.get()
+#     print gui.pwd_input.get()
+#
+#     gui.destroy()
+#     gui.quit()
+#     print "DEAD"
+#     return
+#
+#
+# g = GUI()
+# g.run(test)
