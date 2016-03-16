@@ -96,7 +96,6 @@ class ClientSession(threading.Thread):
 
         while True:
             data = self.recv()
-            print data
             if type(data) is list:
                 self.db_conn.update_query(data)
 
