@@ -29,7 +29,12 @@ class ClientSession(threading.Thread):
             return False
 
     def recv(self, timeout=True):
-        temp_data = self.client_sock.recv(BUFFER_SIZE)
+        try:
+            temp_data = self.client_sock.recv(BUFFER_SIZE)
+        except socket.SO_ERROR as s_error:
+            print 1
+            print s_error
+            return
 
         if timeout:
             self.client_sock.settimeout(5)
@@ -94,10 +99,18 @@ class ClientSession(threading.Thread):
             self.send('200 OK')
         # -- ------------------------------------------- -- #
 
+        self.db_conn.computer_activation(True)
+
         while True:
-            data = self.recv()
+            try:
+                data = self.recv()
+            except:
+                break
             if type(data) is list:
                 self.db_conn.update_query(data)
+
+        self.db_conn.computer_activation(False)
+        print "Computer is DEAD"
 
 
 class Communication:
@@ -125,12 +138,13 @@ class Communication:
         self.sock.close()
 
     def run(self):
-        (client_conn, client_address) = self.sock.accept()
-        print client_address
-        if client_address[0] in self.open_clients:
-            client_session = ClientSession(client_conn, client_address, self.db_conn)
-            client_session.run()
-        else:
-            self.open_clients.append(client_address[0])
-            client_session = ClientSession(client_conn, client_address, self.db_conn)
-            client_session.run()
+        while True:
+            (client_conn, client_address) = self.sock.accept()
+            print client_address
+            if client_address[0] in self.open_clients:
+                client_session = ClientSession(client_conn, client_address, self.db_conn)
+                client_session.run()
+            else:
+                self.open_clients.append(client_address[0])
+                client_session = ClientSession(client_conn, client_address, self.db_conn)
+                client_session.run()

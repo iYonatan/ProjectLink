@@ -10,12 +10,14 @@ class LoginFrame(Frame):
         self.master.minsize(350, 150)
         self.master.resizable(0, 0)
         self.master.iconbitmap(
-            default='C:\Users\Yonatan\PycharmProjects\ProjectLink\Documents\Other\projectlink_sm_icon.ico')
+            default=r'C:\Users\User\Desktop\ProjectLink\Documents\Other\projectlink_sm_icon.ico')
 
         self.method_name = method_name
 
         self.username_input = Entry(self)
+        self.username_input.insert(0, "iyonatan")
         self.pwd_input = Entry(self, show="*")
+        self.pwd_input.insert(0, "123456")
 
         self.label_1 = Label(self, text="Username: ")
         self.label_2 = Label(self, text="Password: ")

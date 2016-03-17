@@ -309,7 +309,7 @@ class CPU:
                     suspicious = self.monitor.cpu_warning(self, proc)
                     if not suspicious[default.ZERO]:
                         continue
-            time.sleep(10)
+            time.sleep(100)
 
 
 # ============================================================================ Memory
@@ -375,7 +375,7 @@ class Memory:
                     suspicious = self.monitor.memory_warning(self, proc, used)
                     if not suspicious[default.ZERO]:
                         continue
-            time.sleep(10)
+            time.sleep(100)
 
 
 # ============================================================================ Disk
@@ -433,7 +433,7 @@ class Network:
 
         self.monitor = monitor
 
-        self.IP_ADDR = "192.168.1.12"
+        self.IP_ADDR = "10.92.5.59"
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 

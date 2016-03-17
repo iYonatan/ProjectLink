@@ -72,10 +72,26 @@ class Connector:
         print "New Computer has been added"
         return
 
+    def computer_activation(self, active_status):
+        query = "UPDATE computer SET computer_active = {} WHERE User_ID = {} AND Computer_ID = '{}' ".format(
+            active_status,
+            self.user_id,
+            self.computer_id)
+
+        self.execute(query, (), True)
+        return
+
     def update_query(self, data_list):
         table_name = data_list[0]
         column_name = data_list[1]
         value = data_list[2]
+
+        if table_name == 'events':
+            query = "UPDATE {0} SET {1} = CONCAT('{2}', {1}) WHERE User_ID = {3} AND Computer_ID = '{4}'".format(
+                table_name, column_name, value, self.user_id, self.computer_id)
+            print query
+            self.execute(query, (), True)
+            return
 
         if column_name == 'Disk_list':
             value = json.dumps(value)
@@ -87,7 +103,7 @@ class Connector:
             return
 
         query = "UPDATE {} SET {} = {} WHERE  User_ID = {} AND Computer_ID = '{}'".format(
-                table_name, column_name, value, self.user_id, self.computer_id)
+            table_name, column_name, value, self.user_id, self.computer_id)
 
         self.execute(query, (), True)
         return

@@ -27,7 +27,9 @@ class Monitor(object):
         handle_proc = proc[pid][1]
 
         while True:
+
             time.sleep(1)
+
             try:
                 usage = hcpu.cpu_process_util(handle_proc)
             except:
@@ -39,9 +41,9 @@ class Monitor(object):
 
             if (now - start) > 20:
                 self.suspicious_processes.append(name_proc)
-                self.comm.send(
-                    "(CPU) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc), str(pid),
-                                                                                           str(usage)))
+                value = "(CPU) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc), str(pid),
+                                                                                               str(usage))
+                self.comm.send(["events", "Events_List", value])
                 return True, usage
 
     def memory_warning(self, hmemo, proc, used):
@@ -73,10 +75,11 @@ class Monitor(object):
 
             if (now - start) >= 20:
                 self.suspicious_processes.append(name_proc)
-                self.comm.send("(Memory) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc),
-                                                                                                         str(pid),
-                                                                                                         str(proc_usage)
-                                                                                                         ))
+                value = "(Memory) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc),
+                                                                                                  str(pid),
+                                                                                                  str(proc_usage)
+                                                                                                  )
+                self.comm.send(["events", "Events_List", value])
                 return True, proc_usage
 
     def disk_warning(self, disk_dict):
@@ -85,7 +88,8 @@ class Monitor(object):
 
             if disk_used_percent >= 50 and disk_used_percent > self.disk[key]:
                 self.disk[key] = disk_used_percent
-                print "{} is {}% full".format(key, str(disk_used_percent))
+                value = "{} is {}% full".format(key, str(disk_used_percent))
+                self.comm.send(["events", "Events_List", value])
 
         return
 
@@ -128,8 +132,9 @@ class Monitor(object):
                     if value[0] % 100 == 0:  # Number of packets in a particular port
                         print now - value[1]
                         if now - value[1] < 3:
-                            print "DDOS ATTACK!! From: {}".format(src_ip)
-
+                            value = "DDOS ATTACK!! From: {}".format(src_ip)
+                            self.comm.send(["events", "Events_List", value])
+                            break
                         else:
                             value[1] = time.time()
 
