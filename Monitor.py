@@ -5,10 +5,12 @@ from functions import *
 class Monitor(object):
     def __init__(self, comm):
         self.comm = comm
+
         self.segments = []  # Collects the segments
         self.segments_dict = {}
 
-        self.suspicious_processes = []
+        self.suspicious_CPU_processes = []
+        self.suspicious_Memory_processes = []
         self.disk = {}
 
     def cpu_warning(self, hcpu, proc):
@@ -26,9 +28,10 @@ class Monitor(object):
         name_proc = proc[pid][0]
         handle_proc = proc[pid][1]
 
-        while True:
+        avarage_usage = 0
+        usage_counter = 0
 
-            time.sleep(1)
+        while True:
 
             try:
                 usage = hcpu.cpu_process_util(handle_proc)
@@ -39,12 +42,31 @@ class Monitor(object):
 
             now = time.time()
 
-            if (now - start) > 20:
-                self.suspicious_processes.append(name_proc)
-                value = "(CPU) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc), str(pid),
-                                                                                               str(usage))
-                self.comm.send(["events", "Events_List", value])
-                return True, usage
+            if 20 < (now - start) < 60:
+                # print "(CPU) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc),
+                #                                                                              str(pid),
+                #                                                                              str(usage))
+                avarage_usage += usage
+                usage_counter += 1
+
+            if (now - start) >= 80:  # 5 minutes
+
+                avarage_usage /= usage_counter
+                print "(cpu) PID: {} | avarage: {}".format(pid, avarage_usage)
+
+                if avarage_usage >= 15:
+                    if pid in self.suspicious_CPU_processes:
+                        return True, avarage_usage
+                    else:
+                        self.suspicious_CPU_processes.append(pid)
+                        value = ["CPU", str(pid), str(name_proc), str(avarage_usage)]
+                        print value
+                        self.comm.send(["events", "Events_List", value])
+                        return True, avarage_usage
+                else:
+                    return False, usage
+
+            time.sleep(1)
 
     def memory_warning(self, hmemo, proc, used):
         """
@@ -62,34 +84,54 @@ class Monitor(object):
         name_proc = proc[pid][0]
         handle_proc = proc[pid][1]
 
+        avarage_usage = 0
+        usage_counter = 0
+
         while True:
             time.sleep(1)
             try:
-                proc_usage = bytes2percent(hmemo.memory_process_usage(handle_proc), used)
+                usage = bytes2percent(hmemo.memory_process_usage(handle_proc), used)
             except:
                 return False, None
-            if proc_usage <= 10:
-                return False, proc_usage
+            if usage <= 10:
+                return False, usage
 
             now = time.time()
 
-            if (now - start) >= 20:
-                self.suspicious_processes.append(name_proc)
-                value = "(Memory) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc),
-                                                                                                  str(pid),
-                                                                                                  str(proc_usage)
-                                                                                                  )
-                self.comm.send(["events", "Events_List", value])
-                return True, proc_usage
+            if 20 <= (now - start) < 60:
+                # print "(Memory) Suspicious process has been found: {} (PID: {}) has {}%".format(str(name_proc),
+                #                                                                              str(pid),
+                #                                                                              str(usage))
+                avarage_usage += usage
+                usage_counter += 1
+
+            if (now - start) >= 80:  # 5 minutes
+                avarage_usage /= usage_counter
+                print "(memory) PID: {} | avarage: {}".format(pid, avarage_usage)
+
+                if avarage_usage >= 10:
+                    if pid in self.suspicious_Memory_processes:
+                        return True, avarage_usage
+                    else:
+                        self.suspicious_Memory_processes.append(pid)
+                        value = ["Memory", str(pid), str(name_proc), str(avarage_usage)]
+                        print value
+                        self.comm.send(["events", "Events_List", value])
+                        return True, avarage_usage
+                else:
+                    return False, usage
 
     def disk_warning(self, disk_dict):
+        disk_warn = []
         for key, disk_data in disk_dict.items():
             disk_used_percent = bytes2percent(disk_data['used'], disk_data['total'])
 
             if disk_used_percent >= 50 and disk_used_percent > self.disk[key]:
                 self.disk[key] = disk_used_percent
                 value = "{} is {}% full".format(key, str(disk_used_percent))
-                self.comm.send(["events", "Events_List", value])
+                disk_warn.append(value)
+
+        # self.comm.send(["events", "Events_List", disk_warn])
 
         return
 
@@ -132,7 +174,8 @@ class Monitor(object):
                     if value[0] % 100 == 0:  # Number of packets in a particular port
                         print now - value[1]
                         if now - value[1] < 3:
-                            value = "DDOS ATTACK!! From: {}".format(src_ip)
+                            print "DDOS ATTACK!! From: {}".format(src_ip)
+                            value = ["Network", src_ip, "DDOS SYN Flood"]
                             self.comm.send(["events", "Events_List", value])
                             break
                         else:

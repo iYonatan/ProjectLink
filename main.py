@@ -80,7 +80,6 @@ def system_handler():
 
     while default.UNLIMITED_LOOP:
         opened_proc, closed_proc = s.run()
-
         if len(opened_proc) > default.ZERO:
             for proc in opened_proc:
                 monitor_cpu_thread = Thread(target=cpu_handler, args=(c, proc, opened_proc[proc]))
@@ -88,8 +87,6 @@ def system_handler():
 
                 monitor_memory_thread = Thread(target=memory_handler, args=(m, proc, s.processes[proc]))
                 monitor_memory_thread.start()
-
-                time.sleep(default.WAIT_1_SEC)
 
         time.sleep(5)
 
@@ -147,11 +144,11 @@ def main():
     :return:
     """
 
-    disk_thread = Thread(target=disk_handler)
-    disk_thread.start()
-
     CPU_MEMORY_DISK_Thread = Thread(target=CPU_MEMORY_DISK)
     CPU_MEMORY_DISK_Thread.start()
+
+    disk_thread = Thread(target=disk_handler)
+    disk_thread.start()
 
     network_handler()
     system_handler()

@@ -62,9 +62,15 @@ class ClientSession(threading.Thread):
         return USERNAME, PASSWORD
 
     def run(self):
-        self.client_sock.send(self.sec.export_public_key())
-        (self.sec.aes_key, self.sec.mode, self.sec.iv) = cPickle.loads(self.client_sock.recv(1024))
-        self.sec.create_cipher()
+
+        try:
+            self.client_sock.send(self.sec.export_public_key())
+            (self.sec.aes_key, self.sec.mode, self.sec.iv) = cPickle.loads(self.client_sock.recv(1024))
+            self.sec.create_cipher()
+
+        except:
+            print "Unable to continue the connection with {}".format(self.client_address)
+            return
 
         (USERNAME, PASSWORD) = self.user_handle()
         # -- ------------------------------------------- -- #

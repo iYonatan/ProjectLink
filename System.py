@@ -167,6 +167,8 @@ class System:
         if len(new_processes) > default.ZERO:
             self.create_process_handle_dict(new_pid_dict)
             for pid in new_processes:
+                if new_pid_dict[pid][default.ZERO] is 0:
+                    continue
                 self.processes.update({pid: new_pid_dict[pid]})
                 new_processes_dict.update({pid: new_pid_dict[pid]})
 
@@ -178,6 +180,18 @@ class System:
                 self.processes.pop(pid, None)
 
         return new_processes_dict, closed_processes_dict
+
+
+# s = System()
+# s.processes = s.get_processes_dict()
+# s.create_process_handle_dict(s.processes)
+# print s.processes
+# while default.UNLIMITED_LOOP:
+#     opened_proc, closed_proc = s.run()
+#     if len(opened_proc) > default.ZERO:
+#         print opened_proc
+#
+#     time.sleep(1)
 
 
 # ============================================================================ CPU
@@ -309,7 +323,7 @@ class CPU:
                     suspicious = self.monitor.cpu_warning(self, proc)
                     if not suspicious[default.ZERO]:
                         continue
-            time.sleep(100)
+            time.sleep(10)
 
 
 # ============================================================================ Memory
@@ -375,7 +389,7 @@ class Memory:
                     suspicious = self.monitor.memory_warning(self, proc, used)
                     if not suspicious[default.ZERO]:
                         continue
-            time.sleep(100)
+            time.sleep(10)
 
 
 # ============================================================================ Disk
@@ -433,7 +447,7 @@ class Network:
 
         self.monitor = monitor
 
-        self.IP_ADDR = "10.92.5.59"
+        self.IP_ADDR = "192.168.1.12"
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 

@@ -82,12 +82,14 @@ class Connector:
         return
 
     def update_query(self, data_list):
+
         table_name = data_list[0]
         column_name = data_list[1]
         value = data_list[2]
 
         if table_name == 'events':
-            query = "UPDATE {0} SET {1} = CONCAT('{2}', {1}) WHERE User_ID = {3} AND Computer_ID = '{4}'".format(
+            value = json.dumps(value)
+            query = "UPDATE {0} SET {1} = CONCAT('{2}|', {1}) WHERE User_ID = {3} AND Computer_ID = '{4}'".format(
                 table_name, column_name, value, self.user_id, self.computer_id)
             print query
             self.execute(query, (), True)
