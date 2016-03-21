@@ -187,11 +187,15 @@ def FIRST_SETUP():
     # From now on until the 'return' statment, the client will be sending initinal data about the computer:
     # 1. Computer operation system
     # 2. CPU model
-    # 3. How many CPU the computer has
-    # 4. Total memory ram
+    # 3. Computer name
+    # 4. How many CPU the computer has
+    # 5. Total memory ram
 
     OS_version = s.get_os_version()
     comm.send(["Computer", "OS_version", OS_version])
+
+    Computer_name = s.get_computer_name()
+    comm.send(["Computer", "computer_name", Computer_name])
 
     CPU_model = c.get_cpu_model()
     comm.send(["System", "CPU_model", CPU_model])

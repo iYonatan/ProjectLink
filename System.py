@@ -38,6 +38,9 @@ class System:
             "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
             "ProductName")
 
+    def get_computer_name(self):
+        return win32api.GetUserName()
+
     def get_computer_UUID(self):
         uuid = Popen(['wmic', 'csproduct', 'get', 'UUID'], stdout=PIPE, stdin=PIPE)
         return uuid.communicate()[default.ZERO].split()[default.ONE]
@@ -180,18 +183,6 @@ class System:
                 self.processes.pop(pid, None)
 
         return new_processes_dict, closed_processes_dict
-
-
-# s = System()
-# s.processes = s.get_processes_dict()
-# s.create_process_handle_dict(s.processes)
-# print s.processes
-# while default.UNLIMITED_LOOP:
-#     opened_proc, closed_proc = s.run()
-#     if len(opened_proc) > default.ZERO:
-#         print opened_proc
-#
-#     time.sleep(1)
 
 
 # ============================================================================ CPU
@@ -447,7 +438,7 @@ class Network:
 
         self.monitor = monitor
 
-        self.IP_ADDR = "192.168.1.12"
+        self.IP_ADDR = "10.92.5.59"
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 

@@ -54,10 +54,10 @@ class Connector:
         print results
         return results
 
-    def add_computer(self, OS_version, CPU_model, CPU_num, Memo_Total_Ram):
-        query = """INSERT INTO computer (User_ID, Computer_ID, OS_version)
-                                        VALUES (%s, %s, %s)"""
-        args = (self.user_id, self.computer_id, OS_version)
+    def add_computer(self, OS_version, Computer_name, CPU_model, CPU_num, Memo_Total_Ram):
+        query = """INSERT INTO computer (User_ID, Computer_ID, OS_version, computer_name)
+                                        VALUES (%s, %s, %s, %s)"""
+        args = (self.user_id, self.computer_id, OS_version, Computer_name)
         self.execute(query, args, True)
 
         query = """INSERT INTO system (User_ID, Computer_ID, CPU_model, CPU_num, Memo_Total_Ram)

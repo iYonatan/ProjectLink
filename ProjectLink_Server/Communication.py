@@ -87,10 +87,14 @@ class ClientSession(threading.Thread):
 
         if not self.db_conn.computer_exists():
             self.send('400 NOT FOUND')
+
             os_version = self.recv()[2]
             print os_version
 
-            cpu_model = self.recv()[2]
+            computer_name = self.recv(True)[2]
+            print computer_name
+
+            cpu_model = self.recv(True)[2]
             print cpu_model
 
             cpu_num = self.recv()[2]
@@ -99,7 +103,7 @@ class ClientSession(threading.Thread):
             memo_total_ram = self.recv()[2]
             print memo_total_ram
 
-            self.db_conn.add_computer(os_version, cpu_model, cpu_num, memo_total_ram)
+            self.db_conn.add_computer(os_version, computer_name, cpu_model, cpu_num, memo_total_ram)
             print "Computer has been added"
         else:
             self.send('200 OK')
@@ -109,7 +113,7 @@ class ClientSession(threading.Thread):
 
         while True:
             try:
-                data = self.recv()
+                data = self.recv(True)
             except:
                 break
             if type(data) is list:
