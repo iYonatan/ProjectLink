@@ -1,8 +1,7 @@
-import socket
-import threading
-import time
 import cPickle
 import json
+import socket
+import threading
 
 from Security import *
 
@@ -32,18 +31,18 @@ class ClientSession(threading.Thread):
         try:
             temp_data = self.client_sock.recv(BUFFER_SIZE)
         except socket.SO_ERROR as s_error:
-            print 1
             print s_error
             return
 
         if timeout:
-            self.client_sock.settimeout(5)
+            self.client_sock.settimeout(10)
 
         decrypted_data = self.sec.decrypt(temp_data)
         try:
             return json.loads(decrypted_data)
 
         except Exception as e:
+            print decrypted_data
             print e
             return
 
@@ -91,10 +90,10 @@ class ClientSession(threading.Thread):
             os_version = self.recv()[2]
             print os_version
 
-            computer_name = self.recv(True)[2]
+            computer_name = self.recv()[2]
             print computer_name
 
-            cpu_model = self.recv(True)[2]
+            cpu_model = self.recv()[2]
             print cpu_model
 
             cpu_num = self.recv()[2]
@@ -113,7 +112,7 @@ class ClientSession(threading.Thread):
 
         while True:
             try:
-                data = self.recv(True)
+                data = self.recv()
             except:
                 break
             if type(data) is list:

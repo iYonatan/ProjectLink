@@ -1,3 +1,4 @@
+import json
 import time
 from functions import *
 
@@ -52,7 +53,7 @@ class Monitor(object):
             if (now - start) >= 80:  # 5 minutes
 
                 avarage_usage /= usage_counter
-                print "(cpu) PID: {} | avarage: {}".format(pid, avarage_usage)
+                # print "(cpu) PID: {} | avarage: {}".format(pid, avarage_usage)
 
                 if avarage_usage >= 15:
                     if pid in self.suspicious_CPU_processes:
@@ -107,7 +108,7 @@ class Monitor(object):
 
             if (now - start) >= 80:  # 5 minutes
                 avarage_usage /= usage_counter
-                print "(memory) PID: {} | avarage: {}".format(pid, avarage_usage)
+                # print "(memory) PID: {} | avarage: {}".format(pid, avarage_usage)
 
                 if avarage_usage >= 10:
                     if pid in self.suspicious_Memory_processes:
@@ -131,9 +132,9 @@ class Monitor(object):
                 value = "{} is {}% full".format(key, str(disk_used_percent))
                 disk_warn.append(value)
 
-        # self.comm.send(["events", "Events_List", disk_warn])
-
-        return
+        if len(disk_warn) > 0:
+            value = ["Disk", disk_warn]
+            self.comm.send(["events", "Events_List", value])
 
     def Add_segmnet(self, segment):
         """

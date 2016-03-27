@@ -124,6 +124,8 @@ def disk_handler():
     while default.UNLIMITED_LOOP:
         comm.send(["system", "Disk_list", d.disk_dict])
         time.sleep(1800)
+        d.disk_get_partitions()
+        d.disk_usage()
 
 
 def network_handler():

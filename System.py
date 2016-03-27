@@ -11,6 +11,7 @@ import multiprocessing
 
 import socket
 import struct
+import json
 
 from config import *
 from functions import *
@@ -250,8 +251,13 @@ class CPU:
         usr = SecSystemTimes['userTime'] - FirstSystemTimes['userTime']
         ker = SecSystemTimes['kernelTime'] - FirstSystemTimes['kernelTime']
         idl = SecSystemTimes['idleTime'] - FirstSystemTimes['idleTime']
+
         self.sys = usr + ker
-        return int((self.sys - idl) * default.PERCENT_LIMIT / self.sys)
+        cpu_util = int((self.sys - idl) * default.PERCENT_LIMIT / self.sys)
+        if cpu_util <= 100:
+            return cpu_util
+        else:
+            return 0
 
     def cpu_process_util(self, hproc):
         """
@@ -405,7 +411,7 @@ class Disk:
         drives = win32api.GetLogicalDriveStrings()
         drives = drives.split('\000')[:-1]
         for drive in drives:
-            self.disk_dict[drive] = {}
+            self.disk_dict[drive + "\\"] = {}
 
     def disk_usage(self):
         """
@@ -417,8 +423,8 @@ class Disk:
         free = ctypes.c_int64()
         for drive in self.disk_dict:
             GetDiskFreeSpaceExW(unicode(drive), ctypes.byref(freeuser), ctypes.byref(total), ctypes.byref(free))
-            self.disk_dict[drive] = {'total': total.value,
-                                     'used': (total.value - free.value)}
+            self.disk_dict[drive] = {"total": total.value,
+                                     "used": (total.value - free.value)}
 
     def run(self):
         """
@@ -438,7 +444,7 @@ class Network:
 
         self.monitor = monitor
 
-        self.IP_ADDR = "10.92.5.59"
+        self.IP_ADDR = "192.168.1.12"
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 

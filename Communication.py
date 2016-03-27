@@ -1,6 +1,7 @@
 import cPickle
 import json
 import socket
+import time
 
 from Security import *
 
@@ -24,7 +25,10 @@ class Communication:
         :param data: client data (string)
         :return: If data has been sent or if hasn't (boolean)
         """
+
         try:
+            time.sleep(1)
+            self.sock.settimeout(10)
             self.sock.send(self.sec.encrypt(json.dumps(data)))  # Sends cncrypted data to the server
             return True  # Returns if the data has been sent
 
