@@ -444,7 +444,7 @@ class Network:
 
         self.monitor = monitor
 
-        self.IP_ADDR = "192.168.1.12"
+        self.IP_ADDR = socket.gethostbyname(socket.gethostname())
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
 
