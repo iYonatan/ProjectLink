@@ -570,19 +570,19 @@ class Network:
                 if only_syn and tcp_segment["src_ip"] != self.IP_ADDR:
                     self.monitor.Add_segmnet(tcp_segment)
                     # print tcp_segment
-                    # # region Print
-                    # "TCP segment:"
+                # # region Print
+                # "TCP segment:"
 
-                    # print ('src_port: {}, dest_port: {}'.format(src_port, dest_port, ))
-                    # print (
-                    #     'flag_urg: {}, flag_ack: {}, flag_psh: {},flag_rst: {}, flag_syn: {}, flag_fin: {}'.format(
-                    #         flag_urg,
-                    #         flag_ack,
-                    #         flag_psh,
-                    #         flag_rst,
-                    #         flag_syn,
-                    #         flag_fin))
-                    # # endregion
+                # print ('src_port: {}, dest_port: {}'.format(src_port, dest_port, ))
+                # print (
+                #     'flag_urg: {}, flag_ack: {}, flag_psh: {},flag_rst: {}, flag_syn: {}, flag_fin: {}'.format(
+                #         flag_urg,
+                #         flag_ack,
+                #         flag_psh,
+                #         flag_rst,
+                #         flag_syn,
+                #         flag_fin))
+                # # endregion
 
             # UDP segment
             elif proto == network.UDP:
@@ -595,3 +595,5 @@ class Network:
             else:
                 continue
                 # print(TAB_1 + 'Other IPv4 Data...')
+
+            time.sleep(0.1)

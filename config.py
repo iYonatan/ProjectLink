@@ -24,7 +24,6 @@ class system(object):
 
 
 class network(object):
-    HOST_IP = parser.get('Socket', 'HOST_IP')
     PORT = int(parser.get('Socket', 'PORT'))
     MAX_PACKET_RECIVER = int(parser.get('Socket', 'MAX_PACKET_RECIVER'))
     ICMP = int(parser.get('Socket', 'ICMP'))

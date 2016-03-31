@@ -174,13 +174,16 @@ class Monitor(object):
                 for key, value in self.segments_dict.items():
                     if value[0] % 100 == 0:  # Number of packets in a particular port
                         print now - value[1]
-                        if now - value[1] < 3:
+                        if now - value[1] < 21:
                             print "DDOS ATTACK!! From: {}".format(src_ip)
                             value = ["Network", src_ip, "DDOS SYN Flood"]
                             self.comm.send(["events", "Events_List", value])
+                            now = time.time()
                             break
                         else:
                             value[1] = time.time()
 
             except:
                 main_segment = {}
+
+            time.sleep(0.1)
