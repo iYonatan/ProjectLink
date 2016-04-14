@@ -4,7 +4,6 @@
 #include "stdafx.h"
 #include <iostream>
 #include "DLList.h"
-#include "dirent.h"
 
 
 using namespace std;
