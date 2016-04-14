@@ -1,6 +1,5 @@
 # ProjectLink
 ================= Welcome to Project Link =================
-  ![alt-tag](Document\Other\projectlink_sm_icon.png)
   -> Project Link will be availible in May 2016.
   
 ---------------------------------------------------------------
