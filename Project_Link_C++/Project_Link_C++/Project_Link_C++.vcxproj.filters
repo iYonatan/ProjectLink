@@ -30,6 +30,9 @@
     <ClInclude Include="..\..\..\..\Desktop\dirent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="General.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -39,6 +42,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DLList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="General.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

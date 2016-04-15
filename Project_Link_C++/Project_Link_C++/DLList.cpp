@@ -3,7 +3,7 @@
 #include <iostream>
 #include "DLList.h"
 #include "dirent.h"
-
+#include "General.h"
 
 using namespace std;
 
@@ -55,7 +55,7 @@ void DLList::Create()
 			// Check for valid DOS file
 			if (dosHeader != nullptr && dosHeader->e_magic == IMAGE_DOS_SIGNATURE) {
 
-				if (this->is_PE(dosHeader)) {
+				if (General::is_PE(dosHeader)) {
 
 					// The offset of NT header is found at 0x3C location in the DOS header specified by e_lfanew
 				   //  Get the Base of NT Header(PE Header)  = dosHeader + RVA address of PE header
@@ -66,8 +66,8 @@ void DLList::Create()
 
 						//Get the IMAGE FILE HEADER Structure
 						header = ntHeader->FileHeader;
-						bool valid_dll = this->is_dll(header);
-						int x86_or_amd64 = this->x86_amd64(header);
+						bool valid_dll = General::is_dll(header);
+						int x86_or_amd64 = General::x86_amd64(header);
 						if(valid_dll && (x86_or_amd64 == 32 || x86_or_amd64 == 64)){
 							//string red [2] = { "asd", "asdasd" };
 							//this->dll_list.insert(pair<string, string (*)[2]> (str, &red));
@@ -77,7 +77,10 @@ void DLList::Create()
 
 							//File size = (Size of code segment(.text) + Size of Initialized data)
 							auto fileSize = opHeader.SizeOfCode + opHeader.SizeOfInitializedData;
-							cout << str << "\t" << fileSize << "Bytes" << endl;
+							// cout << str << "\t" << fileSize << "Bytes" << endl;
+
+							Info dll_info = { to_string(fileSize), "" };
+							this->Dll_list.insert(pair<string, Info>(str, dll_info));
 						}
 					}
 				}
@@ -92,34 +95,14 @@ void DLList::Create()
 	}
 }
 
-bool DLList::is_PE(PIMAGE_DOS_HEADER  dosHeader)
+ostream& DLList::operator<<(ostream& os)
 {
-	if (dosHeader->e_magic == 0x5a4d) {
-		return true;
+	for (map<string, Info>::iterator it = this->Dll_list.begin(); it != this->Dll_list.end(); it++)
+	{
+		os << it->first << "\t" << it->second.info[0] << endl;
 	}
-	else {
-		return false;
-	}
+	return os << "";
 }
-
-int DLList::x86_amd64(IMAGE_FILE_HEADER header)
-{
-	switch (header.Machine) { 
-		//Only few are determined (for remaining refer to the above specification)
-		case 0x14c:  return 32; break; // 32 Bit
-		case 0x8664: return 64; break; // 64 Bit
-
-		default:     return 0; break;
-	}
-}
-
-bool DLList::is_dll(IMAGE_FILE_HEADER header)
-{
-	if ((header.Characteristics & 0x2000) == 0x2000) return true;
-
-	return false;
-}
-
 
 DLList::~DLList()
 {
