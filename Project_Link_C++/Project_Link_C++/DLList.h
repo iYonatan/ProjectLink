@@ -1,17 +1,12 @@
 #include <string>
 #include <Windows.h>
 #include <map>
+#include "General.h"
 
 using namespace std;
 
-class DLList
+class DLList : public General
 {
-
-private:
-	struct Info
-	{
-		string info[2];
-	};
 
 public:
 	DLList();

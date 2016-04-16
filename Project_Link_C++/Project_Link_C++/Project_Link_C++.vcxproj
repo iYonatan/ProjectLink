@@ -149,12 +149,14 @@
     <ClInclude Include="..\..\..\..\Desktop\dirent.h" />
     <ClInclude Include="DLList.h" />
     <ClInclude Include="General.h" />
+    <ClInclude Include="JsonParser.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLList.cpp" />
     <ClCompile Include="General.cpp" />
+    <ClCompile Include="JsonParser.cpp" />
     <ClCompile Include="Project_Link_C++.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -165,6 +167,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Project_Link_C++.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon1.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
