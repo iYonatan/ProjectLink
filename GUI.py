@@ -1,5 +1,10 @@
-from tkinter import *
-import tkinter.messagebox as tm
+try:
+    from tkinter import *
+    import tkinter.messagebox as tm
+
+except:
+    from Tkinter import *
+    import tkMessageBox as tm
 
 
 class LoginFrame(Frame):

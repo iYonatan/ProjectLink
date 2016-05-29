@@ -147,7 +147,6 @@ class Communication:
 
     def recv(self):
         return self.sock.recv(BUFFER_SIZE)
-
     def close(self):
         self.sock.close()
 
