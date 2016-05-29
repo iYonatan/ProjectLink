@@ -12,7 +12,7 @@ class Communication:
     def __init__(self):
 
         HOST = 'localhost'  # IP host
-        PORT = 8030  # The same port as used by the server
+        PORT = 8031  # The same port as used by the server
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create socket object
         self.sock.connect((HOST, PORT))  # socket connects to the server

@@ -122,13 +122,18 @@ class ClientSession(threading.Thread):
         print "Computer is DEAD"
 
 
+class ServerSession:
+    def __init__(self, client_conn, client_address, db_conn):
+        pass
+
+
 class Communication:
     def __init__(self, db_conn):
         self.db_conn = db_conn
 
         self.open_clients = []
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind(('0.0.0.0', 8030))
+        self.sock.bind(('0.0.0.0', 8031))
         self.sock.listen(5)
         print "Waiting for connections...\n\n"
 
