@@ -10,7 +10,7 @@ class LoginFrame(Frame):
         self.master.minsize(350, 150)
         self.master.resizable(0, 0)
         self.master.iconbitmap( # C:\Users\Yonatan\PycharmProjects\ProjectLink\Documents\Other\projectlink_sm_icon.ico
-            default=r'C:\Users\Yonatan\PycharmProjects\ProjectLink\Documents\Other\projectlink_sm_icon.ico')
+            default=r'Documents\Other\projectlink_sm_icon.ico')
 
         self.method_name = method_name
 
